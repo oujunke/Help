@@ -1,0 +1,835 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Web;
+using HtmlAgilityPack;
+
+namespace ExtendHelp
+{
+    public static class StringExtend
+    {
+        public static Encoding GBK = Encoding.GetEncoding("GBK");
+        #region 正则表达式
+        /// <summary>
+        /// 正则获取匹配的字符串
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="pattern"></param>
+        /// <param name="retuenIndex"></param>
+        /// <returns></returns>
+        public static string RegexGetString(this string str, string pattern, int retuenIndex = 1)
+        {
+            Regex r = new Regex(pattern, RegexOptions.None);
+            return r.Match(str).Groups[retuenIndex].Value;
+        }
+        /// <summary>
+        /// 获取正则匹配的所有字符串
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="pattern"></param>
+        /// <param name="retuenIndex"></param>
+        /// <returns></returns>
+        public static List<List<string>> RegexGetAllString(this string str, string pattern)
+        {
+            Regex r = new Regex(pattern, RegexOptions.None);
+            var mat = r.Matches(str);
+            var res = new List<List<string>>();
+            mat.ForEach<Match>(t =>
+            {
+                var sl = new List<string>();
+                t.Groups.ForEach<Group>(g =>
+                {
+                    sl.Add(g.Value);
+                });
+                res.Add(sl);
+            });
+            return res;
+        }
+         /// <summary>
+         /// 判断字符串是否匹配
+         /// </summary>
+         /// <param name="str"></param>
+         /// <param name="pattern"></param>
+         /// <param name="retuenIndex"></param>
+         /// <returns></returns>
+        public static bool IsMatch(this string str, string pattern)
+        {
+            Regex r = new Regex(pattern, RegexOptions.None);
+            return r.IsMatch(str);
+        }
+        #endregion
+        #region 加密
+        #region  Base64加密解密
+        /// <summary>
+        /// Base64加密
+        /// </summary>
+        /// <param name="input">需要加密的字符串</param>
+        /// <returns></returns>
+        public static string Base64Encrypt(this string input)
+        {
+            return Base64Encrypt(input, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// Base64加密
+        /// </summary>
+        /// <param name="input">需要加密的字符串</param>
+        /// <param name="encode">字符编码</param>
+        /// <returns></returns>
+        public static string Base64Encrypt(this string input, Encoding encode)
+        {
+            return Convert.ToBase64String(encode.GetBytes(input));
+        }
+
+        /// <summary>
+        /// Base64解密
+        /// </summary>
+        /// <param name="input">需要解密的字符串</param>
+        /// <returns></returns>
+        public static string Base64Decrypt(this string input)
+        {
+            return Base64Decrypt(input, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// Base64解密
+        /// </summary>
+        /// <param name="input">需要解密的字符串</param>
+        /// <param name="encode">字符的编码</param>
+        /// <returns></returns>
+        public static string Base64Decrypt(this string input, Encoding encode)
+        {
+            return encode.GetString(Convert.FromBase64String(input));
+        }
+        #endregion
+
+        #region DES加密解密
+        /// <summary>
+        /// DES加密
+        /// </summary>
+        /// <param name="input">加密数据</param>
+        /// <param name="key">8位字符的密钥字符串</param>
+        /// <param name="iv">8位字符的初始化向量字符串</param>
+        /// <returns></returns>
+        public static string DesEncrypt(this string input, string key, string iv)
+        {
+            var byKey = Encoding.ASCII.GetBytes(key);
+            var byIv = Encoding.ASCII.GetBytes(iv);
+
+            var cryptoProvider = new DESCryptoServiceProvider();
+            using (var ms = new MemoryStream())
+            {
+                using (var cst = new CryptoStream(ms, cryptoProvider.CreateEncryptor(byKey, byIv), CryptoStreamMode.Write))
+                {
+                    using (var sw = new StreamWriter(cst))
+                    {
+                        sw.Write(input);
+                        sw.Flush();
+                        cst.FlushFinalBlock();
+                        return Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// DES解密
+        /// </summary>
+        /// <param name="data">解密数据</param>
+        /// <param name="key">8位字符的密钥字符串(需要和加密时相同)</param>
+        /// <param name="iv">8位字符的初始化向量字符串(需要和加密时相同)</param>
+        /// <returns></returns>
+        public static string DesDecrypt(this string data, string key, string iv)
+        {
+            var byKey = Encoding.ASCII.GetBytes(key);
+            var byIv = Encoding.ASCII.GetBytes(iv);
+
+            var byEnc = Convert.FromBase64String(data);
+            var cryptoProvider = new DESCryptoServiceProvider();
+
+            using (var ms = new MemoryStream(byEnc))
+            {
+                using (var cst = new CryptoStream(ms, cryptoProvider.CreateDecryptor(byKey, byIv), CryptoStreamMode.Read))
+                {
+                    using (var sr = new StreamReader(cst))
+                    {
+                        return sr.ReadToEnd();
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region AES加密解密
+        /// <summary>
+        /// 有密码的AES加密 
+        /// </summary>
+        /// <param name="input">加密字符</param>
+        /// <param name="key">加密的密码</param>
+        /// <param name="iv">密钥</param>
+        /// <returns></returns>
+        public static string AesEncrypt(this string input, string key, string iv)
+        {
+            var rijndaelCipher = new RijndaelManaged
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128
+            };
+
+            var pwdBytes = Encoding.UTF8.GetBytes(key);
+            var keyBytes = new byte[16];
+            var len = pwdBytes.Length;
+            if (len > keyBytes.Length)
+            {
+                len = keyBytes.Length;
+            }
+
+            Array.Copy(pwdBytes, keyBytes, len);
+            rijndaelCipher.Key = keyBytes;
+            var ivBytes = Encoding.UTF8.GetBytes(iv);
+            rijndaelCipher.IV = ivBytes;
+
+            var transform = rijndaelCipher.CreateEncryptor();
+            var plainText = Encoding.UTF8.GetBytes(input);
+            var cipherBytes = transform.TransformFinalBlock(plainText, 0, plainText.Length);
+
+            return Convert.ToBase64String(cipherBytes);
+        }
+
+        /// <summary>
+        /// 随机生成密钥(获取指定位数的字母(大小写)，数字)
+        /// </summary>
+        /// <returns></returns>
+        public static string GetIv(this int n)
+        {
+            var arrChar = new[]
+            {
+                'a', 'b', 'd', 'c', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'p', 'r', 'q', 's', 't', 'u', 'v','w', 'z', 'y', 'x','0', '1', '2', '3', '4', '5', '6', '7', '8', '9','A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'Q', 'P', 'R', 'T', 'S', 'V', 'U','W', 'X', 'Y', 'Z'
+            };
+
+            var num = new StringBuilder();
+            var rnd = new Random(DateTime.Now.Millisecond);
+            for (var i = 0; i < n; i++)
+            {
+                num.Append(arrChar[rnd.Next(0, arrChar.Length)].ToString());
+            }
+
+            return num.ToString();
+        }
+
+        /// <summary>
+        /// AES解密
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="password"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static string AesDecrypt(this string text, string password, string iv)
+        {
+            var rijndaelCipher = new RijndaelManaged
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128
+            };
+
+            var encryptedData = Convert.FromBase64String(text);
+            var pwdBytes = Encoding.UTF8.GetBytes(password);
+            var keyBytes = new byte[16];
+            var len = pwdBytes.Length;
+            if (len > keyBytes.Length) len = keyBytes.Length;
+
+            Array.Copy(pwdBytes, keyBytes, len);
+            rijndaelCipher.Key = keyBytes;
+
+            var ivBytes = Encoding.UTF8.GetBytes(iv);
+            rijndaelCipher.IV = ivBytes;
+
+            var transform = rijndaelCipher.CreateDecryptor();
+            var plainText = transform.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
+
+            return Encoding.UTF8.GetString(plainText);
+        }
+
+
+        #endregion
+
+        #region MD5加密
+        /// <summary>
+        /// 对字符串进行MD5加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string Md5Encrypt(this string input)
+        {
+            return Md5Encrypt(input, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// 对字符串进行MD5加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="enc"></param>
+        /// <returns></returns>
+        public static string Md5Encrypt(this string input, Encoding enc)
+        {
+            var md5 = new MD5CryptoServiceProvider();
+            var buffer = md5.ComputeHash(enc.GetBytes(input));
+            var builder = new StringBuilder(32);
+            foreach (var t in buffer)
+            {
+                builder.Append(t.ToString("x").PadLeft(2, '0'));
+            }
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// MD5对文件流加密
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public static string Md5Encrypt(this Stream stream)
+        {
+            var md5 = new MD5CryptoServiceProvider();
+            var buffer = md5.ComputeHash(stream);
+            var builder = new StringBuilder();
+            foreach (var t in buffer)
+            {
+                builder.Append(t.ToString("x").PadLeft(2, '0'));
+            }
+            stream.Close();
+            return builder.ToString();
+        }
+        /// <summary>
+        /// MD5对文件流加密
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        public static string Md5EncryptFile(this string path)
+        {
+            return Md5Encrypt(new StreamReader(path).BaseStream);
+        }
+        /// <summary>
+        /// MD5加密(返回16位加密串)
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string Md5Encrypt16(this string input)
+        {
+            return Md5Encrypt16(input, Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// MD5加密(返回16位加密串)
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="encode"></param>
+        /// <returns></returns>
+        public static string Md5Encrypt16(this string input, Encoding encode)
+        {
+            var md5 = new MD5CryptoServiceProvider();
+            var buffer = md5.ComputeHash(encode.GetBytes(input));
+            var result = BitConverter.ToString(buffer, 4, 8);
+            result = result.Replace("-", "");
+            return result;
+        }
+        #endregion
+
+        #region DES3加密解密
+        /// <summary>
+        /// DES3加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static string Des3Encrypt(this string input, string key)
+        {
+            var des = new TripleDESCryptoServiceProvider
+            {
+                Key = Encoding.UTF8.GetBytes(key.Substring(0,24)),
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                IV= Encoding.UTF8.GetBytes(key.Substring(0, 8))
+            };
+
+            var desEncrypt = des.CreateEncryptor();
+            var buffer = Encoding.UTF8.GetBytes(input);
+
+            return Convert.ToBase64String(desEncrypt.TransformFinalBlock(buffer, 0, buffer.Length));
+        }
+
+        /// <summary>
+        /// DES3解密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static string Des3Decrypt(this string input, string key)
+        {
+            var des = new TripleDESCryptoServiceProvider
+            {
+                Key = Encoding.UTF8.GetBytes(key.Substring(0, 24)),
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                IV = Encoding.UTF8.GetBytes(key.Substring(0, 8))
+            };
+
+            var desDecrypt = des.CreateDecryptor();
+            var buffer = Convert.FromBase64String(input);
+            var result = Encoding.UTF8.GetString(desDecrypt.TransformFinalBlock(buffer, 0, buffer.Length));
+
+            return result;
+        }
+
+        #endregion
+
+        #endregion
+        #region http请求
+        /// <summary>
+        /// 使用webclient进行post请求
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="data"></param>
+        /// <param name="enc"></param>
+        /// <param name="proxy"></param>
+        /// <returns></returns>
+        public static string Post(this string url, string data, Encoding enc = null, WebProxy proxy = null)
+        {
+            var postdata = Encoding.UTF8.GetBytes(data);
+            return Post(url, postdata, enc, proxy); //解码  
+        }
+        /// <summary>
+        /// 使用webclient进行post请求
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="data"></param>
+        /// <param name="enc"></param>
+        /// <param name="proxy"></param>
+        /// <returns></returns>
+        public static string Post(this string url, byte[] data, Encoding enc = null, WebProxy proxy = null)
+        {
+            if (enc == null) enc = Encoding.UTF8;
+            var webClient = new WebClient()
+            {
+                Encoding = enc,
+                Proxy = proxy
+            };
+            webClient.Headers.Add(HttpRequestHeader.KeepAlive, "False");
+            webClient.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+            var response = webClient.UploadData(url, "POST", data); //得到返回字符流  
+            return enc.GetString(response); //解码  
+        }
+        /// <summary>
+        /// 使用webclient进行get请求
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="data"></param>
+        /// <param name="enc"></param>
+        /// <param name="proxy"></param>
+        /// <returns></returns>
+        public static string Get(this string url, Encoding enc = null, WebProxy proxy = null)
+        {
+            if (enc == null) enc = Encoding.UTF8;
+            var webClient = new WebClient()
+            {
+                Encoding = enc,
+                Proxy = proxy,
+            };
+            var response = webClient.DownloadString($"{url}");
+            return response;
+        }
+        public static Stream GetStream(this string url, Encoding enc = null, WebProxy proxy = null)
+		{
+			if (enc == null) enc = Encoding.UTF8;
+			var webClient = new WebClient()
+			{
+				Encoding = enc,
+				Proxy = proxy,
+			};
+			var response = webClient.OpenRead($"{url}");
+			return response;
+		}
+		/// <summary>
+		/// 获取代理IP
+		/// </summary>
+		/// <param name="url"></param>
+		/// <param name="port"></param>
+		/// <param name="usr"></param>
+		/// <param name="pwd"></param>
+		/// <returns></returns>
+		public static WebProxy GetProxy(this string url, string port, string usr, string pwd)
+        {
+            try
+            {
+                var client = new WebClient { Encoding = Encoding.UTF8 };
+                var ip = client.DownloadString(url).Trim();
+                var proxy = new WebProxy($"{ip}:{port}")
+                {
+                    Credentials = new NetworkCredential(usr, pwd)
+                };
+                return proxy;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        #endregion
+        #region 文件操作
+        /// <summary>
+        /// 读取该文件的所有内容
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns></returns>
+        public static string ReadFile(this string file, Encoding en = null)
+        {
+            en = en ?? Encoding.UTF8;
+            using (StreamReader sr = new StreamReader(file, en))
+            {
+                return sr.ReadToEnd();
+            }
+        }
+        /// <summary>
+        /// 写入数据到文本
+        /// </summary>
+        /// <param name="file">文件名</param>
+        /// <param name="data">写入数据</param>
+        /// <param name="append">ture追加，false覆盖(默认覆盖)</param>
+        /// <param name="en">编码(默认utf8)</param>
+        public static void WriterFile(this string file, string data, bool append = false, Encoding en = null)
+        {
+            en = en ?? Encoding.UTF8;
+            using (StreamWriter sr = new StreamWriter(file, append, en))
+            {
+                sr.Write(data);
+            }
+        }
+        #endregion
+        #region 字符串操作
+        /// <summary>
+        /// 转换成url数据集
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static Dictionary<string, string> ToUrlData(this string str)
+        {
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            var ss = str.Split('&');
+            foreach (var s in ss)
+            {
+                var ts = s.IndexOf('=');
+                if (ts > -1)
+                {
+                    dictionary.Add(s.Substring(0, ts), s.Substring(ts + 1));
+                }
+            }
+            return dictionary;
+        }
+        /// <summary>
+        /// 去除字符串末尾指定的字符串
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="par"></param>
+        /// <returns></returns>
+        public static string TrimEnd(this string str,string par)
+        {
+            return str.EndsWith(par)?str.Remove(str.Length-par.Length):str;
+        }
+        /// <summary>
+        /// 字符串分割
+        /// </summary>
+        /// <param name="str">要分割的字符串</param>
+        /// <param name="sp">分割字符串</param>
+        /// <param name="isRetain">是否保留分割字符串</param>
+        /// <returns></returns>
+        public static string[] Split(this string str, string sp,bool isRetain=true)
+        {
+            List<string> ls = new List<string>();
+            int i = 0;
+            int index;
+            int length= isRetain?0:sp.Length;
+            while (true&&i+1<= str.Length)
+            {
+                index = str.IndexOf(sp, i+1);
+                if (index == -1)
+                {
+                    ls.Add(str.Substring(i));
+                    break;
+                }
+                ls.Add(str.Substring(i,index-i));
+                i = index+length;
+            }
+            return ls.ToArray();
+        }
+        /// <summary>
+        /// 判断字符串里面开头是否是字符串组中的一个
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="ss"></param>
+        /// <returns></returns>
+        public static bool StartsWithIn(this string str,params string [] ss)
+        {
+            bool b = false;
+            ss.ForEachT(s => b=b||str.StartsWith(s));
+            return b;
+        }
+        /// <summary>
+        /// 获取一个字符串指定位置的字符
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="length"></param>
+        /// <param name="start"></param>
+        /// <returns></returns>
+        public static char[] GetChars(this string str,int length=-1,int start = 0)
+        {
+            var cs=str.ToArray().Skip(start);
+            if (length >= 0)
+            {
+                cs = cs.Take(length);
+            }
+            return cs.ToArray();
+        }
+        #endregion
+        #region 字符串扩展
+        /// <summary>
+        /// 指示指定的字符串是 null、空还是仅由空白字符组成。
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static bool IsNullOrWhiteSpace(this string str)
+        {
+            return string.IsNullOrWhiteSpace(str);
+        }
+        #endregion
+        #region 编码
+        /// <summary>
+        /// Url编码
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string UrlEncode(this string str) => HttpUtility.UrlEncode(str);
+        /// <summary>
+        /// Url编码
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public static string UrlEncode(this string str, Encoding encoding) => HttpUtility.UrlEncode(str, encoding);
+        /// <summary>
+        /// Url解码
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string UrlDecode(this string str) => HttpUtility.UrlDecode(str);
+        /// <summary>
+        /// Url解码
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public static string UrlDecode(this string str, Encoding encoding) => HttpUtility.UrlDecode(str, encoding);
+        /// <summary>
+        /// Html解码
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string HtmlDecode(this string str) => HttpUtility.HtmlDecode(str);
+        /// <summary>
+        /// Html编码
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string HtmlEncode(this string str) => HttpUtility.HtmlEncode(str);
+        #endregion
+        #region Html操作
+        /// <summary>
+        /// 获取表单数据
+        /// </summary>
+        /// <param name="html"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static string GetInputValue(this string html, string name)
+        {
+            var doc = new HtmlDocument();
+            try
+            {
+                doc.LoadHtml(html);
+                var node = doc.DocumentNode.SelectSingleNode($"//input[@name='{name}']");
+                return node?.Attributes["value"].Value;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return null;
+        }
+        /// <summary>
+        /// 获得该html页面所有的标签
+        /// </summary>
+        /// <param name="html"></param>
+        /// <returns></returns>
+        public static HtmlNodes GetAllHtmlNodes(this string html)
+        {
+            var doc = new HtmlDocument();
+            try
+            {
+                doc.LoadHtml(html);
+                return new HtmlNodes(doc.DocumentNode);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return null;
+        }
+        /// <summary>
+        /// 获得该html页面的指定标签
+        /// </summary>
+        /// <param name="html"></param>
+        /// <param name="selectXPath">选择标签开始路径，null则从根目录开始</param>
+        /// <param name="where">判断标签是否符合，返回是则符合</param>
+        /// <returns></returns>
+        public static HtmlNodes GetHtmlNodesWhere(this string html, string selectXPath = null, Func<HtmlNodes, bool> where = null)
+        {
+            var doc = new HtmlDocument();
+            try
+            {
+                doc.LoadHtml(html);
+                var node = selectXPath == null ? doc.DocumentNode : doc.DocumentNode.SelectSingleNode(selectXPath);
+                var hd = new HtmlNodes(node);
+                if (where == null || where(hd))
+                {
+                    return hd;
+                }
+                HtmlNodes result = null;
+                hd.RecursionAllChildNodes(where, ref result);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            return null;
+
+        }
+        public class HtmlNodes
+        {
+            public string Name { set; get; }
+            public string Text { set; get; }
+            public string Html { set; get; }
+            private HtmlNodes _parent;
+            public HtmlNodes Parent
+            {
+                get
+                {
+                    if (_parent == null)
+                        _parent = new HtmlNodes(node.ParentNode);
+                    return _parent;
+                }
+            }
+            private List<HtmlNodes> _child;
+            public List<HtmlNodes> Child
+            {
+                get
+                {
+                    if (_child == null)
+                    {
+                        _child = new List<HtmlNodes>();
+                        foreach (var nd in node.ChildNodes)
+                        {
+                            _child.Add(new HtmlNodes(nd));
+                        }
+                    }
+                    return _child;
+                }
+            }
+            private Dictionary<string, string> _attributes;
+            public Dictionary<string, string> Attributes
+            {
+                get
+                {
+                    if (_attributes == null)
+                    {
+                        _attributes = new Dictionary<string, string>();
+
+                        foreach (var na in node.Attributes)
+                        {
+                            _attributes.Add(na.Name, na.Value);
+                        }
+                    }
+                    return _attributes;
+                }
+            }
+            private HtmlNode node;
+            public HtmlNodes(HtmlNode node)
+            {
+                this.node = node;
+                Name = node.Name;
+                Text = node.InnerText;
+                Html = node.OuterHtml;
+            }
+            public void RecursionAllChildNodes(Func<HtmlNodes, bool> where, ref HtmlNodes result)
+            {
+                foreach (var nd in Child)
+                {
+                    if (result != null) return;
+                    if (where == null || where(nd))
+                    {
+                        result = nd;
+                        return;
+                    }
+                    else
+                    {
+                        nd.RecursionAllChildNodes(where, ref result);
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 获取所有表单数据
+        /// </summary>
+        /// <param name="html"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static Dictionary<string, string> GetAllInputValue(this string html, string selectXPath = null)
+        {
+            var dict = new Dictionary<string, string>();
+            var doc = new HtmlDocument();
+            try
+            {
+                doc.LoadHtml(html);
+                HtmlNodeCollection nodes = null;
+                if (selectXPath.IsNullOrWhiteSpace())
+                {
+                    nodes = doc.DocumentNode.SelectNodes($"//input");
+                }
+                else
+                {
+                    nodes = doc.DocumentNode.SelectNodes(selectXPath + $"//input");
+                }
+                foreach (var n in nodes)
+                {
+                    var attr = n?.Attributes["value"];
+                    if (n != null && !dict.ContainsKey(n.Attributes["name"].Value)) dict.Add(n.Attributes["name"].Value, attr?.Value.HtmlDecode());
+                }
+
+                //
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+
+            return dict;
+        }
+        #endregion
+    }
+}
