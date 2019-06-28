@@ -92,6 +92,7 @@
     <Compile Include="IEnumerableExtend.cs" />
     <Compile Include="ImageExtend.cs" />
     <Compile Include="Interfaces\DataRowByModelInterface.cs" />
+    <Compile Include="Model\Cmb.cs" />
     <Compile Include="Model\LockBitmap.cs" />
     <Compile Include="ReflectExtend.cs" />
     <Compile Include="Rtf.cs" />

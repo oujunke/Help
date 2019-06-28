@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using ExtendHelp.Model;
 using HtmlAgilityPack;
 
 namespace ExtendHelp
@@ -829,6 +830,41 @@ namespace ExtendHelp
             }
 
             return dict;
+        }
+        #endregion
+        #region CMD
+        /// <summary>
+        /// 执行cmb命令
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="waitTime">等待多少秒超时(waitTime<=0时不超时)</param>
+        /// <returns></returns>
+        public static string RunCmb(this string str,int waitTime=10)
+        {
+           return Cmb.DefaultCmb.RunWaitReturn(str,10);
+        }
+        /// <summary>
+        /// 执行cmb命令并返回cmb对象
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static Cmb RunNewCmb(this string str)
+        {
+            var cmb = new Cmb();
+            cmb.Run(str);
+            return cmb;
+        }
+        /// <summary>
+        /// 执行cmb命令并返回执行结果，输出Cmb对象
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="cmb"></param>
+        /// <param name="waitTime">等待多少秒超时(waitTime<=0时不超时)</param>
+        /// <returns></returns>
+        public static string RunNewCmb(this string str,out Cmb cmb, int waitTime = 10)
+        {
+            cmb = new Cmb();
+            return cmb.RunWaitReturn(str, 10);
         }
         #endregion
     }
