@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExtendHelp.Model;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,17 @@ namespace ExtendHelp
 {
     public static class IEnumerableExtend
     {
+        /// <summary>
+        /// 执行cmb命令并返回cmb对象
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static Cmb RunNewCmb(this IEnumerable<string> en)
+        {
+            var cmb = new Cmb();
+            cmb.RunWaitReturn(en);
+            return cmb;
+        }
         /// <summary>
         /// 遍历IEnumerable集合
         /// </summary>

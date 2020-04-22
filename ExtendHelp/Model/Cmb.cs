@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -18,8 +19,8 @@ namespace ExtendHelp.Model
         /// 上一次输出的数据
         /// </summary>
         public string LastOutString;
-        private string waitData;
-        private object lockObj=new object();
+        private ConcurrentQueue<string> waitData = new ConcurrentQueue<string>();
+        private object lockObj = new object();
         /// <summary>
         /// 该cmd的输出
         /// </summary>
@@ -33,10 +34,13 @@ namespace ExtendHelp.Model
             process.StartInfo.RedirectStandardOutput = true;//由调用程序获取输出信息
             process.StartInfo.RedirectStandardError = true;//重定向标准错误输出
             process.StartInfo.CreateNoWindow = true;//不显示程序窗口
-            process.OutputDataReceived += new DataReceivedEventHandler(OutputHandler);
+            process.OutputDataReceived += OutputHandler;
+            process.ErrorDataReceived += OutputHandler; ;
             process.Start();//启动程序
             process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
         }
+
         static Cmb()
         {
             DefaultCmb = new Cmb();
@@ -52,9 +56,31 @@ namespace ExtendHelp.Model
                 process.StandardInput.WriteLine(cmd + "\r\n");
             }
         }
-        ~Cmb()
+        /// <summary>
+        /// 执行命令组
+        /// </summary>
+        /// <param name="cmds"></param>
+        /// <returns></returns>
+        public List<string> RunWaitReturn(params string[] cmds)
         {
-            Dispose(false);
+            return RunWaitReturn((IEnumerable<string>)cmds);
+        }
+        /// <summary>
+        /// 执行命令组
+        /// </summary>
+        /// <param name="cmds"></param>
+        /// <returns></returns>
+        public List<string> RunWaitReturn(IEnumerable<string> cmds)
+        {
+            List<string> result = new List<string>();
+            lock (lockObj)
+            {
+                foreach (var cmd in cmds)
+                {
+                    result.Add(RunWaitReturn(cmd));
+                }
+            }
+            return result;
         }
         /// <summary>
         /// 执行命令
@@ -67,29 +93,40 @@ namespace ExtendHelp.Model
             lock (lockObj)
             {
                 process.StandardInput.WriteLine(cmd + "\r\n");
-                waitData = null;
+                var inputText = ">" + cmd;
                 for (int i = 0; ; i++)
                 {
-                    if(waitTime>0&&i > waitTime * 10)
+                    if (waitTime > 0 && i > waitTime * 10)
                     {
                         break;
                     }
-                    if (waitData!=null)
+                    if (waitData.Count>0)
                     {
-                        return waitData;
+                        return GetAllMessage();
                     }
                     Thread.Sleep(100);
                 }
                 throw new Exception("执行超时");
             }
         }
+        public string GetAllMessage()
+        {
+            StringBuilder builder = new StringBuilder();
+            while(waitData.TryDequeue(out string str))
+            {
+                builder.AppendLine(str);
+            }
+            return builder.ToString();
+            //Console.WriteLine(process.StandardError.ReadLine());
+        }
         private void OutputHandler(object sendingProcess, DataReceivedEventArgs outLine)
         {
             if (!String.IsNullOrEmpty(outLine.Data))
             {
                 LastOutString = outLine.Data;
-                waitData = outLine.Data;
-                OutputDataReceived(outLine.Data);
+                waitData?.Enqueue(outLine.Data);
+                OutputDataReceived?.Invoke(outLine.Data);
+
             }
         }
 
@@ -110,17 +147,17 @@ namespace ExtendHelp.Model
                 }
                 // TODO: 释放未托管的资源(未托管的对象)并在以下内容中替代终结器。
                 // TODO: 将大型字段设置为 null。
-
+                waitData = null;
                 disposedValue = true;
             }
         }
 
         // TODO: 仅当以上 Dispose(bool disposing) 拥有用于释放未托管资源的代码时才替代终结器。
-        // ~Cmb()
-        // {
-        //   // 请勿更改此代码。将清理代码放入以上 Dispose(bool disposing) 中。
-        //   Dispose(false);
-        // }
+        ~Cmb()
+        {
+            // 请勿更改此代码。将清理代码放入以上 Dispose(bool disposing) 中。
+            Dispose(false);
+        }
 
         // 添加此代码以正确实现可处置模式。
         public void Dispose()

@@ -105,6 +105,55 @@ namespace ExtendHelp
             return (int)(dt - d).TotalSeconds;
         }
         /// <summary>
+        /// 获取时间戳
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public static string GetTimeStamp(this DateTime dateTime)
+        {
+            return GetTimeStampInt(dateTime).ToString();
+        }
+        /// <summary>
+        /// 获取时间戳
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public static long GetTimeStampInt(this DateTime dateTime)
+        {
+            return ((dateTime.ToUniversalTime().Ticks - 621355968000000000) / 10000);
+        }
+        /// <summary>
+        /// 时间戳转时间
+        /// </summary>
+        /// <param name="timeStamp"></param>
+        /// <returns></returns>
+        public static DateTime GetDateTime(this string timeStamp)
+        {
+            if (timeStamp.IsNullOrWhiteSpace())
+            {
+                return DateTime.MinValue;
+            }
+            var num = Int64.Parse(timeStamp);
+            DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            if (num > 9466560000)
+            {
+                TimeSpan toNow = new TimeSpan(num * 10000);
+                return dtStart.Add(toNow);
+            }
+            else
+            {
+                TimeSpan toNow = new TimeSpan(num * 1000 * 10000);
+                return dtStart.Add(toNow);
+            }
+        }
+        public static DateTime GetDateTimes(string timeStamp)
+        {
+            DateTime dtStart = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            long lTime = Int64.Parse($"{timeStamp}0000000");
+            TimeSpan toNow = new TimeSpan(lTime);
+            return dtStart.Add(toNow);
+        }
+        /// <summary>
         /// 把DataRow强制转换成对象
         /// </summary>
         /// <typeparam name="T"></typeparam>

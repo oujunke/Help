@@ -391,7 +391,25 @@ namespace ExtendHelp
         }
 
         #endregion
-
+        #region  SHA1加密
+        /// <summary>
+        /// SHA1加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string SHA1_Encrypt(this string input)
+        {
+            var strRes = Encoding.Default.GetBytes(input);
+            HashAlgorithm iSha = new SHA1CryptoServiceProvider();
+            strRes = iSha.ComputeHash(strRes);
+            var enText = new StringBuilder();
+            foreach (var iByte in strRes)
+            {
+                enText.AppendFormat("{0:x2}", iByte);
+            }
+            return enText.ToString();
+        }
+        #endregion
         #endregion
         #region http请求
         /// <summary>
@@ -597,6 +615,40 @@ namespace ExtendHelp
                 cs = cs.Take(length);
             }
             return cs.ToArray();
+        }
+        /// <summary>
+        /// 字节转字节字符串
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        public static string ToHexString(this byte[] bytes)
+        {
+            string hexString = string.Empty;
+            if (bytes != null)
+            {
+                StringBuilder strB = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    strB.Append(bytes[i].ToString("X2"));
+                }
+                hexString = strB.ToString();
+            }
+            return hexString;
+        }
+        /// <summary>
+        /// 字节字符串转字节
+        /// </summary>
+        /// <param name="hexString"></param>
+        /// <returns></returns>
+        public static byte[] StringToHexByte(this string hexString)
+        {
+            hexString = hexString.Replace(" ", "");
+            if ((hexString.Length % 2) != 0)
+                hexString += " ";
+            byte[] returnBytes = new byte[hexString.Length / 2];
+            for (int i = 0; i < returnBytes.Length; i++)
+                returnBytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
+            return returnBytes;
         }
         #endregion
         #region 字符串扩展
