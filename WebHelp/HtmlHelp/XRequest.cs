@@ -6,7 +6,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Security;
 using System.Text;
-
+using ExtendHelp;
 namespace Help.WebHelp.HtmlHelp
 {
     public class XRequest
@@ -231,6 +231,8 @@ namespace Help.WebHelp.HtmlHelp
                 var response = (HttpWebResponse)request.GetResponse();
                 var recvStream = response.GetResponseStream();
                 var responseEncoding = Encoding.GetEncoding(response.CharacterSet);
+
+
                 if (response.Cookies != null) _webCookieContainer?.Add(response.Cookies);
                 if (recvStream != null)
                 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -51,13 +52,13 @@ namespace ExtendHelp
             });
             return res;
         }
-         /// <summary>
-         /// 判断字符串是否匹配
-         /// </summary>
-         /// <param name="str"></param>
-         /// <param name="pattern"></param>
-         /// <param name="retuenIndex"></param>
-         /// <returns></returns>
+        /// <summary>
+        /// 判断字符串是否匹配
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="pattern"></param>
+        /// <param name="retuenIndex"></param>
+        /// <returns></returns>
         public static bool IsMatch(this string str, string pattern)
         {
             Regex r = new Regex(pattern, RegexOptions.None);
@@ -355,10 +356,10 @@ namespace ExtendHelp
         {
             var des = new TripleDESCryptoServiceProvider
             {
-                Key = Encoding.UTF8.GetBytes(key.Substring(0,24)),
+                Key = Encoding.UTF8.GetBytes(key.Substring(0, 24)),
                 Mode = CipherMode.CBC,
                 Padding = PaddingMode.PKCS7,
-                IV= Encoding.UTF8.GetBytes(key.Substring(0, 8))
+                IV = Encoding.UTF8.GetBytes(key.Substring(0, 8))
             };
 
             var desEncrypt = des.CreateEncryptor();
@@ -466,25 +467,25 @@ namespace ExtendHelp
             return response;
         }
         public static Stream GetStream(this string url, Encoding enc = null, WebProxy proxy = null)
-		{
-			if (enc == null) enc = Encoding.UTF8;
-			var webClient = new WebClient()
-			{
-				Encoding = enc,
-				Proxy = proxy,
-			};
-			var response = webClient.OpenRead($"{url}");
-			return response;
-		}
-		/// <summary>
-		/// 获取代理IP
-		/// </summary>
-		/// <param name="url"></param>
-		/// <param name="port"></param>
-		/// <param name="usr"></param>
-		/// <param name="pwd"></param>
-		/// <returns></returns>
-		public static WebProxy GetProxy(this string url, string port, string usr, string pwd)
+        {
+            if (enc == null) enc = Encoding.UTF8;
+            var webClient = new WebClient()
+            {
+                Encoding = enc,
+                Proxy = proxy,
+            };
+            var response = webClient.OpenRead($"{url}");
+            return response;
+        }
+        /// <summary>
+        /// 获取代理IP
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="port"></param>
+        /// <param name="usr"></param>
+        /// <param name="pwd"></param>
+        /// <returns></returns>
+        public static WebProxy GetProxy(this string url, string port, string usr, string pwd)
         {
             try
             {
@@ -558,9 +559,9 @@ namespace ExtendHelp
         /// <param name="str"></param>
         /// <param name="par"></param>
         /// <returns></returns>
-        public static string TrimEnd(this string str,string par)
+        public static string TrimEnd(this string str, string par)
         {
-            return str.EndsWith(par)?str.Remove(str.Length-par.Length):str;
+            return str.EndsWith(par) ? str.Remove(str.Length - par.Length) : str;
         }
         /// <summary>
         /// 字符串分割
@@ -569,22 +570,22 @@ namespace ExtendHelp
         /// <param name="sp">分割字符串</param>
         /// <param name="isRetain">是否保留分割字符串</param>
         /// <returns></returns>
-        public static string[] Split(this string str, string sp,bool isRetain=true)
+        public static string[] Split(this string str, string sp, bool isRetain = true)
         {
             List<string> ls = new List<string>();
             int i = 0;
             int index;
-            int length= isRetain?0:sp.Length;
-            while (true&&i+1<= str.Length)
+            int length = isRetain ? 0 : sp.Length;
+            while (true && i + 1 <= str.Length)
             {
-                index = str.IndexOf(sp, i+1);
+                index = str.IndexOf(sp, i + 1);
                 if (index == -1)
                 {
                     ls.Add(str.Substring(i));
                     break;
                 }
-                ls.Add(str.Substring(i,index-i));
-                i = index+length;
+                ls.Add(str.Substring(i, index - i));
+                i = index + length;
             }
             return ls.ToArray();
         }
@@ -594,10 +595,10 @@ namespace ExtendHelp
         /// <param name="str"></param>
         /// <param name="ss"></param>
         /// <returns></returns>
-        public static bool StartsWithIn(this string str,params string [] ss)
+        public static bool StartsWithIn(this string str, params string[] ss)
         {
             bool b = false;
-            ss.ForEachT(s => b=b||str.StartsWith(s));
+            ss.ForEachT(s => b = b || str.StartsWith(s));
             return b;
         }
         /// <summary>
@@ -607,9 +608,9 @@ namespace ExtendHelp
         /// <param name="length"></param>
         /// <param name="start"></param>
         /// <returns></returns>
-        public static char[] GetChars(this string str,int length=-1,int start = 0)
+        public static char[] GetChars(this string str, int length = -1, int start = 0)
         {
-            var cs=str.ToArray().Skip(start);
+            var cs = str.ToArray().Skip(start);
             if (length >= 0)
             {
                 cs = cs.Take(length);
@@ -649,6 +650,19 @@ namespace ExtendHelp
             for (int i = 0; i < returnBytes.Length; i++)
                 returnBytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
             return returnBytes;
+        }
+        /// <summary>
+        /// Base64转图片
+        /// </summary>
+        /// <param name="base64Str"></param>
+        /// <returns></returns>
+        public static Bitmap Base64StringToBitmap(this string base64Str)
+        {
+            var datas = base64Str.Split(';');
+            byte[] imageBs = null;
+            imageBs = Convert.FromBase64String((datas.Length == 2 ? datas[1] : datas[0]).Replace("base64,", ""));
+            MemoryStream memory = new MemoryStream(imageBs);
+            return Image.FromStream(memory) as Bitmap;
         }
         #endregion
         #region 字符串扩展
@@ -891,9 +905,9 @@ namespace ExtendHelp
         /// <param name="str"></param>
         /// <param name="waitTime">等待多少秒超时(waitTime<=0时不超时)</param>
         /// <returns></returns>
-        public static string RunCmb(this string str,int waitTime=10)
+        public static string RunCmb(this string str, int waitTime = 10)
         {
-           return Cmb.DefaultCmb.RunWaitReturn(str,10);
+            return Cmb.DefaultCmb.RunWaitReturn(str, 10);
         }
         /// <summary>
         /// 执行cmb命令并返回cmb对象
@@ -913,7 +927,7 @@ namespace ExtendHelp
         /// <param name="cmb"></param>
         /// <param name="waitTime">等待多少秒超时(waitTime<=0时不超时)</param>
         /// <returns></returns>
-        public static string RunNewCmb(this string str,out Cmb cmb, int waitTime = 10)
+        public static string RunNewCmb(this string str, out Cmb cmb, int waitTime = 10)
         {
             cmb = new Cmb();
             return cmb.RunWaitReturn(str, 10);

@@ -56,16 +56,13 @@ namespace ExtendHelp
         public static Color[,] ToColorArray(this Bitmap bitmap)
         {
             Color[,] cs = new Color[bitmap.Height, bitmap.Width];
-            Color c = Color.Empty;
-            var bd = bitmap.LockBitmap();
             for (int y = 0; y < bitmap.Height; y++)
             {
                 for (int x = 0; x < bitmap.Width; x++)
                 {
-                    cs[y, x] = bd.GetPixel(x, y);
+                    cs[y, x] = bitmap.GetPixel(x, y);
                 }
             }
-            bd.UnlockBits();
             return cs;
         }
         public static Bitmap ColorArrayToBitmap(this Color[,] colorData)
