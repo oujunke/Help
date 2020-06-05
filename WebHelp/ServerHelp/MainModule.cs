@@ -8,8 +8,8 @@ namespace Help.WebHelp.ServerHelp
 {
    public class MainModule
     {
-        public Dictionary<string, Func<IHttpRequest, string>> ModuleMethod = new Dictionary<string, Func<IHttpRequest, string>>();
-        public void AddMethod(string url,Func<IHttpRequest, string> Method)
+        public Dictionary<string, Func<AutoDictionary<string, string>, string>> ModuleMethod = new Dictionary<string, Func<AutoDictionary<string, string>, string>>();
+        public void AddMethod(string url,Func<AutoDictionary<string, string>, string> Method)
         {
             url = url.ToLower();
             if (!ModuleMethod.ContainsKey(url))
@@ -18,28 +18,42 @@ namespace Help.WebHelp.ServerHelp
             }
         }
         
-        public bool Execute(string key,IHttpRequest request,out string Result)
+        public bool Execute(string key, IRequest request,out string result)
         {
             key = key.ToLower().Trim('/','\\').Split('?')[0];
             if (key.StartsWith("content")&&File.Exists(key)) {
                 var sr = new StreamReader(key);
-                Result = sr.ReadToEnd();
+                result = sr.ReadToEnd();
                 return true;
             }
             else if (ModuleMethod.ContainsKey(key))
             {
-                Result=ModuleMethod[key](request);
+                var getDataDictionary = GetData(request.Uri.Query.Trim('?'));
+                var postDataDictionary = GetForm(request);
+                foreach (var item in getDataDictionary)
+                {
+                    if (!postDataDictionary.ContainsKey(item.Key))
+                    {
+                        postDataDictionary.Add(item.Key,item.Value);
+                    }
+                }
+                result = ModuleMethod[key](postDataDictionary);
                 return true;
             }
-            Result = null;
+            result = null;
             return false;
         }
-        public Dictionary<string, string> GetForm(IHttpRequest Request)
+        private AutoDictionary<string, string> GetForm(IRequest Request)
         {
             var s = GetBody(Request);
-            Dictionary<string, string> Form = new Dictionary<string, string>();
-            var ss = s.Split('&'); 
-            foreach(var f in ss)
+            return GetData(s);
+        }
+
+        private static AutoDictionary<string, string> GetData(string s)
+        {
+            AutoDictionary<string, string> Form = new AutoDictionary<string, string>();
+            var ss = s.Split('&');
+            foreach (var f in ss)
             {
                 var p = f.Split('=');
                 if (p.Length > 1)
@@ -49,7 +63,8 @@ namespace Help.WebHelp.ServerHelp
             }
             return Form;
         }
-        public string GetBody(IHttpRequest Request)
+
+        public string GetBody(IRequest Request)
         {
             var bs = new byte[Request.Body.Length];
             Request.Body.Read(bs, 0, bs.Length);

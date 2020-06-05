@@ -264,39 +264,5 @@ namespace ExtendHelp
             }
             return dictionary;
         }
-        /// <summary>
-        /// 设置返回文本，带数据
-        /// </summary>
-        /// <param name="httpClient"></param>
-        /// <param name="body"></param>
-        /// <param name="encoding"></param>
-        /// <param name="httpVersion"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="reason"></param>
-        /// <param name="contentType"></param>
-        public static void Respond(this HttpServer.IHttpClientContext httpClient, byte[] body, Encoding encoding,  string httpVersion= "HTTP/1.1", HttpStatusCode statusCode= HttpStatusCode.OK, string reason="OK", string contentType = "text/html")
-        {
-            string response =!(body!=null&&body.Length>0)
-                                  ? httpVersion + " " + (int)statusCode + " " + reason + "\r\n\r\n"
-                                  : string.Format("{0} {1} {2}\r\nContent-Type: {4}\r\nContent-Length: {3}\r\n\r\n",
-                                                  httpVersion, (int)statusCode, reason ?? statusCode.ToString(),
-                                                  body.Length, contentType);
-            byte[] buffer = encoding.GetBytes(response).Concat(body).ToArray();
-            httpClient.Send(buffer);
-        }
-        /// <summary>
-        /// 设置返回文本，带数据
-        /// </summary>
-        /// <param name="httpClient"></param>
-        /// <param name="body"></param>
-        /// <param name="encoding"></param>
-        /// <param name="httpVersion"></param>
-        /// <param name="statusCode"></param>
-        /// <param name="reason"></param>
-        /// <param name="contentType"></param>
-        public static void Respond(this HttpServer.IHttpClientContext httpClient, string body, Encoding encoding, string httpVersion = "HTTP/1.1", HttpStatusCode statusCode = HttpStatusCode.OK, string reason = "OK", string contentType = "text/html")
-        {
-            Respond(httpClient, encoding.GetBytes(body), encoding, httpVersion, statusCode, reason, contentType);
-        }
     }
 }

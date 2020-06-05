@@ -19,7 +19,7 @@ namespace Help.WebHelp.HtmlHelp
         /// </summary>
         /// <param name="obj">需要序列化的字符串</param>
         /// <returns></returns>
-        public static string ObjectToJSON(this object obj)
+        public static string ObjectToJSON(object obj)
         {
             return _jss.Serialize(obj);
         }
@@ -29,7 +29,7 @@ namespace Help.WebHelp.HtmlHelp
         /// <typeparam name="T"></typeparam>
         /// <param name="JSON">需要反序列化的字符串</param>
         /// <returns></returns>
-        public static T JSONToObject<T>(this string JSON)
+        public static T JSONToObject<T>(string JSON)
         {
             return _jss.Deserialize<T>(JSON);
         }
@@ -40,7 +40,7 @@ namespace Help.WebHelp.HtmlHelp
         /// <param name="JSON">需要反序列化的字符串</param>
         /// <param name="t">需要反序列化成的类型</param>
         /// <returns></returns>
-        public static Object JSONToObject(this string JSON,Type t)
+        public static Object JSONToObject(string JSON,Type t)
         {
             return _jss.Deserialize(JSON,t);
         }
@@ -51,7 +51,7 @@ namespace Help.WebHelp.HtmlHelp
         /// </summary>
         /// <param name="obj">需要序列化的字符串</param>
         /// <returns></returns>
-        public static string ObjectToJSONByJSON(this object obj)
+        public static string ObjectToJSONByJSON(object obj)
         {
             _dcjs = new DataContractJsonSerializer(obj.GetType());
             using (MemoryStream ms = new MemoryStream())

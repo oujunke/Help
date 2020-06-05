@@ -841,7 +841,7 @@ namespace Help.WinFormsHelp.WinApi.WinApiHelp
         }
         public class ModelList : List<WindowModel>
         {
-            public WindowModel this[int num]
+            public new WindowModel this[int num]
             {
                 get
                 {

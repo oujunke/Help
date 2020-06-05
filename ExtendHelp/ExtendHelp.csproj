@@ -73,9 +73,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\HtmlAgilityPack.dll</HintPath>
     </Reference>
-    <Reference Include="HttpServer">
-      <HintPath>Lib\HttpServer.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -107,6 +104,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Lib\HtmlAgilityPack.dll" />
+    <Content Include="Lib\HttpServer.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
