@@ -36,17 +36,6 @@ namespace ExtendHelp
                 }
             }
             return bs;
-        }//
-        /// <summary>
-        /// 获取内存锁定对象
-        /// </summary>
-        /// <param name="bitmap"></param>
-        /// <returns></returns>
-        public static LockBitmap LockBitmap(this Bitmap bitmap)
-        {
-            LockBitmap lockBitmap = new LockBitmap(bitmap);
-            lockBitmap.LockBits();
-            return lockBitmap;
         }
         /// <summary>
         /// 图片数组化
@@ -65,6 +54,42 @@ namespace ExtendHelp
             }
             return cs;
         }
+        /// <summary>
+        /// 图片数组化(快速-使用指针)
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
+        public unsafe static Color[,] ToColorArrayFast(this Bitmap bitmap)
+        {
+            Color[,] result = new Color[bitmap.Width, bitmap.Height];
+            BitmapData data = null;
+            try
+            {
+                data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+                byte* ptr = (byte*)((void*)data.Scan0);
+                for (int i = 0; i < data.Height; i++)
+                {
+                    for (int j = 0; j < data.Width; j++)
+                    {
+                        byte b = *(ptr++);
+                        byte g = *(ptr++);
+                        byte r = *(ptr++);
+                        result[j, i] = Color.FromArgb((int)r, (int)g, (int)b);
+                    }
+                    ptr += data.Stride - data.Width * 3;
+                }
+            }
+            finally
+            {
+                bitmap.UnlockBits(data);
+            }
+            return result;
+        }
+        /// <summary>
+        /// 转图片(快速-使用指针)
+        /// </summary>
+        /// <param name="colorData"></param>
+        /// <returns></returns>
         public static Bitmap ColorArrayToBitmap(this Color[,] colorData)
         {
             Bitmap bi = new Bitmap(colorData.GetLength(1), colorData.GetLength(0));
@@ -76,6 +101,37 @@ namespace ExtendHelp
                 }
             }
             return bi;
+        }
+        /// <summary>
+        /// 转图片
+        /// </summary>
+        /// <param name="colors"></param>
+        /// <returns></returns>
+        public unsafe static Bitmap ToBitmapFast(this Color[,] colors)
+        {
+            Bitmap bitmap = new Bitmap(colors.GetLength(0), colors.GetLength(1));
+            BitmapData data = null;
+            try
+            {
+                data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+                byte* ptr = (byte*)((void*)data.Scan0);
+                for (int i = 0; i < data.Height; i++)
+                {
+                    for (int j = 0; j < data.Width; j++)
+                    {
+                        Color color = colors[j, i];
+                        *(ptr++) = color.B;
+                        *(ptr++) = color.G;
+                        *(ptr++) = color.R;
+                    }
+                    ptr += data.Stride - data.Width * 3;
+                }
+            }
+            finally
+            {
+                bitmap.UnlockBits(data);
+            }
+            return bitmap;
         }
         public static Bitmap BinaryArrayToBinaryBitmap(this byte[,] bitData)
         {

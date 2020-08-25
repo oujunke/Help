@@ -103,6 +103,8 @@
     <Compile Include="DataHelp\SqlServerHelp\DBHelp.cs" />
     <Compile Include="DataHelp\SqlServerHelp\SqlTypeHelp.cs" />
     <Compile Include="ImageHelp\ShapeConvolutional2D.cs" />
+    <Compile Include="Model\AutoDictionary.cs" />
+    <Compile Include="Model\CookDictionary.cs" />
     <Compile Include="Model\Delegates.cs" />
     <Compile Include="Model\Enums.cs" />
     <Compile Include="Model\Line.cs" />
@@ -119,6 +121,9 @@
     <Compile Include="VisualStudioHelp\VisualStudioFile.cs" />
     <Compile Include="WebHelp\HtmlHelp\DataHelp.cs" />
     <Compile Include="WebHelp\HtmlHelp\XRequest.cs" />
+    <Compile Include="WebHelp\HtmlHelp\XWebClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="WebHelp\ServerHelp\AutoDictionary.cs" />
     <Compile Include="WebHelp\ServerHelp\HttpServerHelp.cs" />
     <Compile Include="WebHelp\ServerHelp\MainModule.cs" />
