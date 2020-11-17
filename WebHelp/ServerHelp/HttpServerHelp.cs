@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using ExtendHelp;
+using Help.Model;
 using HttpServer;
 
 namespace Help.WebHelp.ServerHelp
@@ -47,6 +45,7 @@ namespace Help.WebHelp.ServerHelp
                     return;
                 }
             }
+            context.Respond(string.Empty);
         }
     }
 }

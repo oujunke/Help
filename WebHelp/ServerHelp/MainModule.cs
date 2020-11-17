@@ -1,4 +1,5 @@
-﻿using HttpServer;
+﻿using Help.Model;
+using HttpServer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,8 +23,7 @@ namespace Help.WebHelp.ServerHelp
         {
             key = key.ToLower().Trim('/','\\').Split('?')[0];
             if (key.StartsWith("content")&&File.Exists(key)) {
-                var sr = new StreamReader(key);
-                result = sr.ReadToEnd();
+                result = File.ReadAllText(key);
                 return true;
             }
             else if (ModuleMethod.ContainsKey(key))

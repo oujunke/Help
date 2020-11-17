@@ -15,6 +15,24 @@ namespace ExtendHelp
     public static class ImageExtend
     {
         /// <summary>
+        /// 图片转Base64
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <param name="imageFormat"></param>
+        /// <returns></returns>
+        public static string BitmapToBase64String(this Bitmap bitmap, System.Drawing.Imaging.ImageFormat imageFormat = default)
+        {
+            MemoryStream memory = new MemoryStream();
+            if (imageFormat == default)
+            {
+                imageFormat = System.Drawing.Imaging.ImageFormat.Jpeg;
+            }
+            bitmap.Save(memory, imageFormat);
+            var base64 = Convert.ToBase64String(memory.ToArray());
+            memory.Close();
+            return base64;
+        }
+        /// <summary>
         /// 图片二值化
         /// </summary>
         /// <param name="bitmap"></param>

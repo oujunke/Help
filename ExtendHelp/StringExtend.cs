@@ -307,7 +307,7 @@ namespace ExtendHelp
             {
                 builder.Append(t.ToString("x").PadLeft(2, '0'));
             }
-            stream.Close();
+            //stream.Close();
             return builder.ToString();
         }
         /// <summary>

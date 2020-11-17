@@ -175,7 +175,7 @@ namespace Help.WebHelp.HtmlHelp
                 }
             );
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
+            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls | SecurityProtocolType.Ssl3;
         }
         /// <summary>
         /// 获得请求类
