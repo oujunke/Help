@@ -203,7 +203,6 @@ namespace Help.WebHelp.HtmlHelp
                 var recvStream = response.GetResponseStream();
                 var responseEncoding = Encoding.GetEncoding(response.CharacterSet);
 
-
                 if (response.Cookies != null) WebCookieContainer?.Add(response.Cookies);
                 if (recvStream != null)
                 {

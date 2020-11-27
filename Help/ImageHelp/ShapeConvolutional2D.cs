@@ -13,6 +13,7 @@ namespace Help.ImageHelp
         public Point[] Right;
         public Point[] Bottom;
         public int ANum = 40;
+        public float BrightScale;
         public int[,] Input;
         public Rect KernelRect;
         public Size InputSize;
@@ -278,14 +279,15 @@ namespace Help.ImageHelp
         /// <returns></returns>
         private int GetNum(int x, int y)
         {
-            if (Bright)
-            {
-                return x < y ? 1 : -1;
-            }
-            else
-            {
-                return (x > y * 2 ? 2 : (x > y ? 1 : -1));
-            }
+            return Bright ? y / x : x / y;
+            //if (Bright)
+            //{
+            //    return x < y ? 1 : -1;
+            //}
+            //else
+            //{
+            //    return (x > y * 2 ? 2 : (x > y ? 1 : -1));
+            //}
         }
 
         public class Rect

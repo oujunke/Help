@@ -4,27 +4,31 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+
 namespace Help.WebHelp.ServerHelp
 {
-   public class MainModule
+    public class MainModule
     {
-        public Dictionary<string, Func<AutoDictionary<string, string>, string>> ModuleMethod = new Dictionary<string, Func<AutoDictionary<string, string>, string>>();
-        public void AddMethod(string url,Func<AutoDictionary<string, string>, string> Method)
+        public Dictionary<string, Func<AutoDictionary<string, string>, Task<string>>> ModuleMethod = new Dictionary<string, Func<AutoDictionary<string, string>, Task<string>>>();
+        public void AddMethod(string url, Func<AutoDictionary<string, string>, Task<string>> Method)
         {
             url = url.ToLower();
             if (!ModuleMethod.ContainsKey(url))
             {
-                ModuleMethod.Add(url,Method);
+                ModuleMethod.Add(url, Method);
             }
         }
-        
-        public bool Execute(string key, IHttpRequest request,out string result)
+
+        public async Task<(bool, string)> Execute(string key, IHttpRequest request)
         {
-            key = key.ToLower().Trim('/','\\').Split('?')[0];
-            if (key.StartsWith("content")&&File.Exists(key)) {
+            string result;
+            key = key.ToLower().Trim('/', '\\').Split('?')[0];
+            if (key.StartsWith("content") && File.Exists(key))
+            {
                 var sr = new StreamReader(key);
                 result = sr.ReadToEnd();
-                return true;
+                return (true, result);
             }
             else if (ModuleMethod.ContainsKey(key))
             {
@@ -34,14 +38,14 @@ namespace Help.WebHelp.ServerHelp
                 {
                     if (!postDataDictionary.ContainsKey(item.Key))
                     {
-                        postDataDictionary.Add(item.Key,item.Value);
+                        postDataDictionary.Add(item.Key, item.Value);
                     }
                 }
-                result = ModuleMethod[key](postDataDictionary);
-                return true;
+                result = await ModuleMethod[key](postDataDictionary);
+                return (true, result);
             }
             result = null;
-            return false;
+            return (false, result);
         }
         private AutoDictionary<string, string> GetForm(IHttpRequest Request)
         {

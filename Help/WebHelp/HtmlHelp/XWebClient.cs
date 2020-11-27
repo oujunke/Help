@@ -137,7 +137,7 @@ namespace Help.WebHelp.HtmlHelp
 		/// <summary>
 		/// 默认代理
 		/// </summary>
-		public WebProxy DefaultProxy { get; set; }
+		public IWebProxy DefaultProxy { get; set; }
 
 		/// <summary>
 		/// Cookie
@@ -426,7 +426,7 @@ namespace Help.WebHelp.HtmlHelp
 		/// <returns></returns>
 		public Task<string> PostHtmlAsyn(string url, string data, WebProxy proxy = null)
 		{
-			return Task.Factory.StartNew<string>(() => this.Clone().PostHtml(url, data, proxy));
+			return Task.Factory.StartNew(() => Clone().PostHtml(url, data, proxy));
 		}
 
 		/// <summary>

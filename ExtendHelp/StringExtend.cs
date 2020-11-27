@@ -187,16 +187,12 @@ namespace ExtendHelp
 
             var pwdBytes = Encoding.UTF8.GetBytes(key);
             var keyBytes = new byte[16];
-            var len = pwdBytes.Length;
-            if (len > keyBytes.Length)
-            {
-                len = keyBytes.Length;
-            }
-
-            Array.Copy(pwdBytes, keyBytes, len);
+            Array.Copy(pwdBytes, keyBytes, Math.Min(pwdBytes.Length, keyBytes.Length));
             rijndaelCipher.Key = keyBytes;
             var ivBytes = Encoding.UTF8.GetBytes(iv);
-            rijndaelCipher.IV = ivBytes;
+            var ivDatas= new byte[16];
+            Array.Copy(ivBytes, ivDatas, Math.Min(ivBytes.Length, ivDatas.Length));
+            rijndaelCipher.IV = ivDatas;
 
             var transform = rijndaelCipher.CreateEncryptor();
             var plainText = Encoding.UTF8.GetBytes(input);
@@ -246,14 +242,12 @@ namespace ExtendHelp
             var encryptedData = Convert.FromBase64String(text);
             var pwdBytes = Encoding.UTF8.GetBytes(password);
             var keyBytes = new byte[16];
-            var len = pwdBytes.Length;
-            if (len > keyBytes.Length) len = keyBytes.Length;
-
-            Array.Copy(pwdBytes, keyBytes, len);
+            Array.Copy(pwdBytes, keyBytes, Math.Min(pwdBytes.Length, keyBytes.Length));
             rijndaelCipher.Key = keyBytes;
-
             var ivBytes = Encoding.UTF8.GetBytes(iv);
-            rijndaelCipher.IV = ivBytes;
+            var ivDatas = new byte[16];
+            Array.Copy(ivBytes, ivDatas, Math.Min(ivBytes.Length, ivDatas.Length));
+            rijndaelCipher.IV = ivDatas;
 
             var transform = rijndaelCipher.CreateDecryptor();
             var plainText = transform.TransformFinalBlock(encryptedData, 0, encryptedData.Length);
@@ -352,14 +346,14 @@ namespace ExtendHelp
         /// <param name="input"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static string Des3Encrypt(this string input, string key)
+        public static string Des3Encrypt(this string input, string key, string iv = null)
         {
             var des = new TripleDESCryptoServiceProvider
             {
                 Key = Encoding.UTF8.GetBytes(key.Substring(0, 24)),
                 Mode = CipherMode.CBC,
                 Padding = PaddingMode.PKCS7,
-                IV = Encoding.UTF8.GetBytes(key.Substring(0, 8))
+                IV = Encoding.UTF8.GetBytes((iv??key).Substring(0, 8))
             };
 
             var desEncrypt = des.CreateEncryptor();
@@ -374,14 +368,14 @@ namespace ExtendHelp
         /// <param name="input"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static string Des3Decrypt(this string input, string key)
+        public static string Des3Decrypt(this string input, string key,string iv=null)
         {
             var des = new TripleDESCryptoServiceProvider
             {
                 Key = Encoding.UTF8.GetBytes(key.Substring(0, 24)),
                 Mode = CipherMode.CBC,
                 Padding = PaddingMode.PKCS7,
-                IV = Encoding.UTF8.GetBytes(key.Substring(0, 8))
+                IV = Encoding.UTF8.GetBytes((iv??key).Substring(0, 8))
             };
 
             var desDecrypt = des.CreateDecryptor();
@@ -402,6 +396,25 @@ namespace ExtendHelp
         {
             var strRes = Encoding.Default.GetBytes(input);
             HashAlgorithm iSha = new SHA1CryptoServiceProvider();
+            strRes = iSha.ComputeHash(strRes);
+            var enText = new StringBuilder();
+            foreach (var iByte in strRes)
+            {
+                enText.AppendFormat("{0:x2}", iByte);
+            }
+            return enText.ToString();
+        }
+        #endregion
+        #region  SHA256加密
+        /// <summary>
+        /// SHA256加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string SHA256_Encrypt(this string input)
+        {
+            var strRes = Encoding.Default.GetBytes(input);
+            HashAlgorithm iSha = new SHA256CryptoServiceProvider();
             strRes = iSha.ComputeHash(strRes);
             var enText = new StringBuilder();
             foreach (var iByte in strRes)

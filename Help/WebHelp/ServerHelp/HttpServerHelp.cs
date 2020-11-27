@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using ExtendHelp;
 using HttpServer;
 
@@ -27,7 +28,7 @@ namespace Help.WebHelp.ServerHelp
             if (httpListener != null)
                 httpListener.Stop();
         }
-        public static void AddMethod(string url, Func<AutoDictionary<string, string>, string> Method)
+        public static void AddMethod(string url, Func<AutoDictionary<string, string>, Task<string>> Method)
         {
             mainModule.AddMethod(url, Method);
         }
@@ -41,9 +42,10 @@ namespace Help.WebHelp.ServerHelp
             IHttpClientContext context = sender as IHttpClientContext;
             foreach (var module in Modules)
             {
-                if (module.Execute(request.Uri.AbsolutePath, request, out string result))
+                var (isSuccess, result) = module.Execute(request.Uri.AbsolutePath, request).Result;
+                if (isSuccess)
                 {
-                    context.Respond(result??string.Empty);
+                    context.Respond(result ?? string.Empty);
                     return;
                 }
             }
