@@ -24,7 +24,7 @@ namespace Help.ImageHelp
         /// <summary>
         /// 边框宽度
         /// </summary>
-        public int Border=1;
+        public int Border = 1;
         private int _strides = 1;
         public static Point GetPoint(Bitmap motherBitmap, Bitmap sonBitmap)
         {
@@ -204,13 +204,13 @@ namespace Help.ImageHelp
             int mn = int.MinValue;
             mx = 0;
             my = 0;
-            var w = InputSize.Width - KernelRect.Width - _strides * 2- Border;
-            var h = InputSize.Height - KernelRect.Height - _strides * 2- Border;
+            var w = InputSize.Width - KernelRect.Width - _strides * 2 - Border;
+            var h = InputSize.Height - KernelRect.Height - _strides * 2 - Border;
             var res = new int[w, h];
             int num = 0;
-            for (int y = _strides+ Border; y < h; y++)
+            for (int y = _strides + Border; y < h; y++)
             {
-                for (int x = _strides+ Border; x < w; x++)
+                for (int x = _strides + Border; x < w; x++)
                 {
                     num = ConvolutionValue(x, y);
                     if (num > mn)
@@ -219,11 +219,12 @@ namespace Help.ImageHelp
                         mx = x;
                         my = y;
                     }
-                    res[x - _strides- Border, y - _strides- Border] = num;
+                    res[x - _strides - Border, y - _strides - Border] = num;
                 }
             }
             return res;
         }
+        public static Bitmap Bitmap;
         /// <summary>
         /// 根据像素点，获取卷积值
         /// </summary>
@@ -232,21 +233,42 @@ namespace Help.ImageHelp
         public int ConvolutionValue(int x, int y)
         {
             int num = 0;
+            //bool isSet = Bitmap != null && x == 11 && y == 85;
             foreach (var p in Left)
             {
-                num += GetNum(Input[x + p.X- Border, y + p.Y], Input[x + p.X + Border, y + p.Y]);
+                //if (isSet)
+                //{
+                //    Bitmap.SetPixel(x + p.X - Border, y + p.Y, Color.Red);
+                //    Bitmap.SetPixel(x + p.X + Border, y + p.Y, Color.Blue);
+                //}
+                num += GetNum(Input[x + p.X - Border, y + p.Y], Input[x + p.X + Border, y + p.Y]);
             }
             foreach (var p in Right)
             {
-                num += GetNum(Input[x + p.X+ Border, y + p.Y], Input[x + p.X - Border, y + p.Y]);
+                //if (isSet)
+                //{
+                //    Bitmap.SetPixel(x + p.X + Border, y + p.Y, Color.Red);
+                //    Bitmap.SetPixel(x + p.X - Border, y + p.Y, Color.Blue);
+                //}
+                num += GetNum(Input[x + p.X + Border, y + p.Y], Input[x + p.X - Border, y + p.Y]);
             }
             foreach (var p in Top)
             {
-                num += GetNum(Input[x + p.X, y + p.Y- Border], Input[x + p.X, y + p.Y + Border]);
+                //if (isSet)
+                //{
+                //    Bitmap.SetPixel(x + p.X, y + p.Y - Border, Color.Red);
+                //    Bitmap.SetPixel(x + p.X, y + p.Y + Border, Color.Blue);
+                //}
+                num += GetNum(Input[x + p.X, y + p.Y - Border], Input[x + p.X, y + p.Y + Border]);
             }
             foreach (var p in Bottom)
             {
-                num += GetNum(Input[x + p.X, y + p.Y+ Border], Input[x + p.X, y + p.Y - Border]);
+                //if (isSet)
+                //{
+                //    Bitmap.SetPixel(x + p.X, y + p.Y + Border, Color.Red);
+                //    Bitmap.SetPixel(x + p.X, y + p.Y - Border, Color.Blue);
+                //}
+                num += GetNum(Input[x + p.X, y + p.Y + Border], Input[x + p.X, y + p.Y - Border]);
             }
             return num;
         }
@@ -279,8 +301,40 @@ namespace Help.ImageHelp
         /// <returns></returns>
         private int GetNum(int x, int y)
         {
-            return Bright ? y / x : x / y;
-            //if (Bright)
+            if (Bright)
+            {
+                return (x < y) ? 1 : (-1);
+            }
+
+            if (x > y * 2)
+            {
+                return 3;
+            }
+            else if (x > y * 1.5)
+            {
+                return 2;
+            }
+            else if (x >= y)
+            {
+                return 1;
+            }
+            else if (x * 2 < y)
+            {
+                return -3;
+            }
+            else if (x * 1.5 < y)
+            {
+                return -2;
+            }
+            else
+            {
+                return -1;
+            }
+            //int num1 = x == 0 ? 1 : x;
+            //int num2 = y == 0 ? 1 : y;
+            //var num = bright ? num2 / num1 : num1 / num2;
+            //return num > 0 ? num : -1;
+            //if (bright)
             //{
             //    return x < y ? 1 : -1;
             //}

@@ -7,6 +7,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Web;
 using ExtendHelp.Model;
 using HtmlAgilityPack;
@@ -200,7 +201,222 @@ namespace ExtendHelp
 
             return Convert.ToBase64String(cipherBytes);
         }
+        /// <summary>
+        /// Aes加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <param name="key"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static async Task AesEncrypt(this Stream input, Stream output, string key, string iv)
+        {
+            var pwdBytes = Encoding.UTF8.GetBytes(key);
+            var keyBytes = new byte[16];
+            Array.Copy(pwdBytes, keyBytes, Math.Min(pwdBytes.Length, keyBytes.Length));
+            var ivBytes = Encoding.UTF8.GetBytes(iv);
+            var ivData = new byte[16];
+            Array.Copy(ivBytes, ivData, Math.Min(ivData.Length, ivBytes.Length));
+            await AesEncrypt(input, output, keyBytes, ivData);
+        }
+        /// <summary>
+        /// Aes加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <param name="key"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static async Task AesEncrypt(this Stream input, Stream output, byte[] key, byte[] iv)
+        {
+            var rijndaelCipher = new RijndaelManaged
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128
+            };
+            rijndaelCipher.Key = key;
+            rijndaelCipher.IV = iv;
 
+            var transform = rijndaelCipher.CreateEncryptor();
+            var length = input.Length;
+            var inputLength = transform.InputBlockSize;
+            byte[] inputBytes = new byte[inputLength];
+            byte[] outBytes = new byte[transform.OutputBlockSize];
+            bool isFast = true;
+            while (input.Position < length)
+            {
+                int tempLength;
+                if (isFast)
+                {
+                    isFast = false;
+                    var sizes = BitConverter.GetBytes(length);
+                    Array.Copy(sizes, inputBytes, sizes.Length);
+                    tempLength = await input.ReadAsync(inputBytes, sizes.Length, inputBytes.Length - sizes.Length);
+                    tempLength += sizes.Length;
+                }
+                else
+                {
+                    tempLength = await input.ReadAsync(inputBytes, 0, inputBytes.Length);
+                }
+                if (inputBytes.Length - tempLength > 0)
+                {
+                    Array.Clear(inputBytes, tempLength, inputBytes.Length - tempLength);
+                }
+                int tempOutLength = transform.TransformBlock(inputBytes, 0, inputBytes.Length, outBytes, 0);
+                await output.WriteAsync(outBytes, 0, tempOutLength);
+            }
+        }
+        /// <summary>
+        /// Aes加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <param name="key"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static byte[] AesEncrypt(this byte[] data, byte[] key, byte[] iv, CipherMode mode = CipherMode.CBC)
+        {
+            var rijndaelCipher = new RijndaelManaged
+            {
+                Mode = mode,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128
+            };
+            rijndaelCipher.Key = key;
+            rijndaelCipher.IV = iv;
+
+            var transform = rijndaelCipher.CreateEncryptor();
+            return transform.TransformFinalBlock(data, 0, data.Length);
+        }
+        /// <summary>
+        /// Aes加密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <param name="key"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static string AesEncrypt(this string data, byte[] key, byte[] iv)
+        {
+            return Convert.ToBase64String(AesEncrypt(Convert.FromBase64String(data), key, iv));
+        }
+        /// <summary>
+        /// Aes解密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <param name="key"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static async Task AesDecrypt(this Stream input, Stream output, string key, string iv)
+        {
+
+            var pwdBytes = Encoding.UTF8.GetBytes(key);
+            var keyBytes = new byte[16];
+            Array.Copy(pwdBytes, keyBytes, Math.Min(pwdBytes.Length, keyBytes.Length));
+            var ivBytes = Encoding.UTF8.GetBytes(iv);
+            var ivData = new byte[16];
+            Array.Copy(ivBytes, ivData, Math.Min(ivData.Length, ivBytes.Length));
+            await AesDecrypt(input, output, keyBytes, ivData);
+        }
+        /// <summary>
+        /// Aes解密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <param name="key"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static async Task AesDecrypt(this Stream input, Stream output, byte[] key, byte[] iv)
+        {
+            var rijndaelCipher = new RijndaelManaged
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128
+            };
+            rijndaelCipher.Key = key;
+            rijndaelCipher.IV = iv;
+            var transform = rijndaelCipher.CreateDecryptor();
+            var inputLength = transform.InputBlockSize;
+            byte[] inputBytes = new byte[inputLength];
+            byte[] outBytes = new byte[transform.OutputBlockSize];
+            long optLength = 1;
+            bool isFast = true;
+            long post = 0;
+            while (output.Position < optLength)
+            {
+                int tempLength = await input.ReadAsync(inputBytes, 0, inputBytes.Length);
+                if (inputBytes.Length - tempLength > 0)
+                {
+                    Array.Clear(inputBytes, tempLength, inputBytes.Length - tempLength);
+                }
+                int tempOutLength = transform.TransformBlock(inputBytes, 0, inputBytes.Length, outBytes, 0);
+                if (tempOutLength == 0)
+                {
+                    continue;
+                }
+                if (isFast)
+                {
+                    isFast = false;
+                    optLength = BitConverter.ToInt64(outBytes, 0);
+                    post += tempOutLength - 8;
+                    await output.WriteAsync(outBytes, 8, tempOutLength - 8);
+                }
+                else
+                {
+                    post += tempOutLength;
+                    if (post > optLength)
+                    {
+                        tempOutLength -= (int)(post - optLength);
+                    }
+                    await output.WriteAsync(outBytes, 0, tempOutLength);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Aes解密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <param name="key"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static byte[] AesDecrypt(this byte[] data, byte[] key, byte[] iv, CipherMode mode= CipherMode.CBC)
+        {
+            var rijndaelCipher = new RijndaelManaged
+            {
+                Mode = mode,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128
+            };
+            rijndaelCipher.Key = key;
+            if (mode != CipherMode.ECB)
+            {
+                rijndaelCipher.IV = iv;
+            }
+            var transform = rijndaelCipher.CreateDecryptor();
+            return transform.TransformFinalBlock(data, 0, data.Length);
+        }
+
+        /// <summary>
+        /// Aes解密
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="output"></param>
+        /// <param name="key"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        public static string AesDecrypt(this string data, byte[] key, byte[] iv,CipherMode mode)
+        {
+            return Encoding.UTF8.GetString(AesDecrypt(Convert.FromBase64String(data), key, iv, mode));
+        }
         /// <summary>
         /// 随机生成密钥(获取指定位数的字母(大小写)，数字)
         /// </summary>
