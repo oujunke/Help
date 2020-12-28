@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.IO;
 using System.Text;
 
 namespace ExtendHelp
@@ -37,7 +34,7 @@ namespace ExtendHelp
                 memoryStream = new MemoryStream();
                 stream.CopyTo(memoryStream);
             }
-            return IdentificationVerifyCode(memoryStream,serverUrl);
+            return IdentificationVerifyCode(memoryStream, serverUrl);
         }
         /// <summary>
         /// 以UTF-8写入string数据

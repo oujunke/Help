@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace ExtendHelp
@@ -10,7 +7,7 @@ namespace ExtendHelp
     {
         private static bool IfAddJavaScript(WebBrowser webBrowser)
         {
-            object o= webBrowser.Document.InvokeScript("test");
+            object o = webBrowser.Document.InvokeScript("test");
             return o != null && o.ToString() == "1";
         }
         private static void AddJavaScript(WebBrowser webBrowser)
@@ -30,9 +27,9 @@ namespace ExtendHelp
         /// <param name="url"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static string WPost(this WebBrowser webBrowser,string url,string data = null)
+        public static string WPost(this WebBrowser webBrowser, string url, string data = null)
         {
-            return request(webBrowser,url,data,"POST");
+            return request(webBrowser, url, data, "POST");
         }
         /// <summary>
         /// 使用浏览器进行get请求(页面需要支持jq)
@@ -53,7 +50,7 @@ namespace ExtendHelp
         /// <param name="data"></param>
         /// <param name="type"></param>
         /// <returns></returns>
-        private static string request(this WebBrowser webBrowser, string url, string data,string type)
+        private static string request(this WebBrowser webBrowser, string url, string data, string type)
         {
             webBrowser.Invoke(new Action(() => AddJavaScript(webBrowser)));
             object o = webBrowser.Invoke(new Func<object>(() => webBrowser.Document.InvokeScript("request", new object[] { url, data, type })));

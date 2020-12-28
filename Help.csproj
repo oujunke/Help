@@ -147,12 +147,6 @@
     <Compile Include="WinFormsHelp\WinApi\WinApiHelp\WinIoHelp.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="ExtendHelp\ExtendHelp.csproj">
-      <Project>{ed270543-bbd4-48cb-8234-f99baf8060de}</Project>
-      <Name>ExtendHelp</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="HelpLib\WinIo32.dll" />
     <Content Include="HelpLib\WinIo64.dll" />
     <Content Include="Lib\HttpServer.dll" />

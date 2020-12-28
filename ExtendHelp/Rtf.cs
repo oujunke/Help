@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-
-namespace ExtendHelp
+﻿namespace ExtendHelp
 {
     public class Rtf
     {
@@ -18,7 +12,7 @@ namespace ExtendHelp
         private string _rtfHead;
         public string RTFData { get; private set; }
         public string Text { get; private set; }
-        public Rtf():this(string.Empty)
+        public Rtf() : this(string.Empty)
         {
 
         }
@@ -67,12 +61,12 @@ namespace ExtendHelp
         {
             return AddColorText(str, 0);
         }
-		public static Rtf GetRtf(string str, params object[] ss)
-		{
-			return RtfExtend.AddRtf(new Rtf(), str, ss);
-		}
+        public static Rtf GetRtf(string str, params object[] ss)
+        {
+            return RtfExtend.AddRtf(new Rtf(), str, ss);
+        }
 
-		public Rtf AddRtf(Rtf rh)
+        public Rtf AddRtf(Rtf rh)
         {
             RTFData += rh.RTFData;
             Text += rh.Text;
@@ -134,11 +128,11 @@ namespace ExtendHelp
             }
             return str.ToLower();
         }
-		public override string ToString()
-		{
-			return Text;
-		}
-		public enum RtfColor
+        public override string ToString()
+        {
+            return Text;
+        }
+        public enum RtfColor
         {
             Black,
             Red,

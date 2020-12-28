@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ExtendHelp.Model;
+using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -8,8 +10,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
-using ExtendHelp.Model;
-using HtmlAgilityPack;
 
 namespace ExtendHelp
 {

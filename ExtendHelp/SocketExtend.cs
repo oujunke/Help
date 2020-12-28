@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -33,12 +32,12 @@ namespace ExtendHelp
                 int length = BitConverter.ToInt32(bs.ToArray(), 0);
                 if (length == 0) return "";
                 var bs1 = new byte[length];
-                var num=socket.Receive(bs1);
+                var num = socket.Receive(bs1);
                 while (num < length)
                 {
-                    num+=socket.Receive(bs1, num, length - num, SocketFlags.None);
+                    num += socket.Receive(bs1, num, length - num, SocketFlags.None);
                 }
-                Console.WriteLine("length="+length+ "---num="+num);
+                Console.WriteLine("length=" + length + "---num=" + num);
                 sb.Append(Encoding.UTF8.GetString(bs1));
             } while (isA);
             return sb.ToString();

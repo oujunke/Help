@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -100,7 +99,7 @@ namespace ExtendHelp.Model
                     {
                         break;
                     }
-                    if (waitData.Count>0)
+                    if (waitData.Count > 0)
                     {
                         return GetAllMessage();
                     }
@@ -112,7 +111,7 @@ namespace ExtendHelp.Model
         public string GetAllMessage()
         {
             StringBuilder builder = new StringBuilder();
-            while(waitData.TryDequeue(out string str))
+            while (waitData.TryDequeue(out string str))
             {
                 builder.AppendLine(str);
             }
