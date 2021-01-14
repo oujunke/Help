@@ -1,13 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="新文件夹\**" />
-    <EmbeddedResource Remove="新文件夹\**" />
-    <None Remove="新文件夹\**" />
-  </ItemGroup>
 
 </Project>
