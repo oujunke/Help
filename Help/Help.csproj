@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ExtendHelp\ExtendHelp.csproj" />
+    <ProjectReference Include="..\HttpServer\HttpServer.csproj" />
   </ItemGroup>
 
 </Project>

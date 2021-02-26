@@ -20,7 +20,7 @@ namespace Help.WebHelp.ServerHelp
             }
         }
 
-        public async Task<(bool, string)> Execute(string key, IHttpRequest request)
+        public async Task<(bool, string)> Execute(string key, IRequest request)
         {
             string result;
             key = key.ToLower().Trim('/', '\\').Split('?')[0];
@@ -47,7 +47,7 @@ namespace Help.WebHelp.ServerHelp
             result = null;
             return (false, result);
         }
-        private AutoDictionary<string, string> GetForm(IHttpRequest Request)
+        private AutoDictionary<string, string> GetForm(IRequest Request)
         {
             var s = GetBody(Request);
             return GetData(s);
@@ -68,7 +68,7 @@ namespace Help.WebHelp.ServerHelp
             return Form;
         }
 
-        public string GetBody(IHttpRequest Request)
+        public string GetBody(IRequest Request)
         {
             var bs = new byte[Request.Body.Length];
             Request.Body.Read(bs, 0, bs.Length);

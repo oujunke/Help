@@ -38,17 +38,17 @@ namespace Help.WebHelp.ServerHelp
         }
         private static void HttpListener_RequestReceived(object sender, RequestEventArgs e)
         {
-            IHttpRequest request = e.Request;
-            IHttpClientContext context = sender as IHttpClientContext;
+            IRequest request = e.Request;
             foreach (var module in Modules)
             {
                 var (isSuccess, result) = module.Execute(request.Uri.AbsolutePath, request).Result;
                 if (isSuccess)
                 {
-                    context.Respond(result ?? string.Empty);
+                    e.Response.WriteBody(result ?? string.Empty);
                     return;
                 }
             }
+            e.Response.WriteBody("404");
         }
     }
 }
