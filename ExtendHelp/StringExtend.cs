@@ -191,7 +191,7 @@ namespace ExtendHelp
             Array.Copy(pwdBytes, keyBytes, Math.Min(pwdBytes.Length, keyBytes.Length));
             rijndaelCipher.Key = keyBytes;
             var ivBytes = Encoding.UTF8.GetBytes(iv);
-            var ivDatas= new byte[16];
+            var ivDatas = new byte[16];
             Array.Copy(ivBytes, ivDatas, Math.Min(ivBytes.Length, ivDatas.Length));
             rijndaelCipher.IV = ivDatas;
 
@@ -387,7 +387,7 @@ namespace ExtendHelp
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns></returns>
-        public static byte[] AesDecrypt(this byte[] data, byte[] key, byte[] iv, CipherMode mode= CipherMode.CBC)
+        public static byte[] AesDecrypt(this byte[] data, byte[] key, byte[] iv, CipherMode mode = CipherMode.CBC)
         {
             var rijndaelCipher = new RijndaelManaged
             {
@@ -413,7 +413,7 @@ namespace ExtendHelp
         /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns></returns>
-        public static string AesDecrypt(this string data, byte[] key, byte[] iv,CipherMode mode)
+        public static string AesDecrypt(this string data, byte[] key, byte[] iv, CipherMode mode)
         {
             return Encoding.UTF8.GetString(AesDecrypt(Convert.FromBase64String(data), key, iv, mode));
         }
@@ -473,7 +473,66 @@ namespace ExtendHelp
 
 
         #endregion
-
+        #region RSA加密解密
+        /// <summary>
+        /// Rsa加密
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="modulusBase64"></param>
+        /// <param name="exponentBase64"></param>
+        /// <returns></returns>
+        public static string RsaEncryptBase64(this string data, string modulusBase64, string exponentBase64)
+        {
+            return RsaEncrypt(data, Convert.FromBase64String(modulusBase64), Convert.FromBase64String(exponentBase64));
+        }
+        /// <summary>
+        /// Rsa加密
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="modulusBase64"></param>
+        /// <param name="exponentBase64"></param>
+        /// <returns></returns>
+        public static string RsaEncryptHex(this string data, string modulusHex, string exponentHex)
+        {
+            return RsaEncrypt(data, modulusHex.StringToHexByte(), exponentHex.StringToHexByte());
+        }
+        /// <summary>
+        /// Rsa加密
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="modulus"></param>
+        /// <param name="exponent"></param>
+        /// <returns></returns>
+        public static string RsaEncrypt(this string data, int[] modulus, int[] exponent)
+        {
+            return RsaEncrypt(data, modulus.IntArrayToByteArray(), exponent.IntArrayToByteArray());
+        }
+        /// <summary>
+        /// Rsa加密
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="modulusBase64"></param>
+        /// <param name="exponentBase64"></param>
+        /// <returns></returns>
+        public static string RsaEncrypt(this string data, byte[] modulus, byte[] exponent)
+        {
+            List<byte> resultList = new List<byte>();
+            var dataBs = Encoding.UTF8.GetBytes(data);
+            using (RSA rsa = RSA.Create())
+            {
+                rsa.ImportParameters(new RSAParameters
+                {
+                    Modulus = modulus,
+                    Exponent = exponent,
+                });
+                for (int i = 0; i < dataBs.Length; i++)
+                {
+                    resultList.AddRange(rsa.Encrypt(dataBs.Substring(i,Math.Min(dataBs.Length-i,117)), RSAEncryptionPadding.Pkcs1));
+                }
+            }
+            return Convert.ToBase64String(resultList.ToArray());
+        }
+        #endregion
         #region MD5加密
         /// <summary>
         /// 对字符串进行MD5加密
@@ -569,7 +628,7 @@ namespace ExtendHelp
                 Key = Encoding.UTF8.GetBytes(key.Substring(0, 24)),
                 Mode = CipherMode.CBC,
                 Padding = PaddingMode.PKCS7,
-                IV = Encoding.UTF8.GetBytes((iv??key).Substring(0, 8))
+                IV = Encoding.UTF8.GetBytes((iv ?? key).Substring(0, 8))
             };
 
             var desEncrypt = des.CreateEncryptor();
@@ -584,14 +643,14 @@ namespace ExtendHelp
         /// <param name="input"></param>
         /// <param name="key"></param>
         /// <returns></returns>
-        public static string Des3Decrypt(this string input, string key,string iv=null)
+        public static string Des3Decrypt(this string input, string key, string iv = null)
         {
             var des = new TripleDESCryptoServiceProvider
             {
                 Key = Encoding.UTF8.GetBytes(key.Substring(0, 24)),
                 Mode = CipherMode.CBC,
                 Padding = PaddingMode.PKCS7,
-                IV = Encoding.UTF8.GetBytes((iv??key).Substring(0, 8))
+                IV = Encoding.UTF8.GetBytes((iv ?? key).Substring(0, 8))
             };
 
             var desDecrypt = des.CreateDecryptor();
@@ -872,9 +931,9 @@ namespace ExtendHelp
         /// <returns></returns>
         public static byte[] StringToHexByte(this string hexString)
         {
-            hexString = hexString.Replace(@"\x","").Replace(" ", "");
+            hexString = hexString.Replace(@"\x", "").Replace(" ", "");
             if ((hexString.Length % 2) != 0)
-                hexString += " ";
+                hexString = "0"+ hexString;
             byte[] returnBytes = new byte[hexString.Length / 2];
             for (int i = 0; i < returnBytes.Length; i++)
                 returnBytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);

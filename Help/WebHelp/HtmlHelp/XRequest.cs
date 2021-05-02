@@ -206,7 +206,7 @@ namespace Help.WebHelp.HtmlHelp
                 if (response.Cookies != null) WebCookieContainer?.Add(response.Cookies);
                 if (recvStream != null)
                 {
-                    if (response.ContentEncoding.ToLower().Contains("gzip"))
+                    if (response.ContentEncoding?.ToLower().Contains("gzip")==true)
                     {
                         using (var stream = new GZipStream(recvStream, CompressionMode.Decompress))
                         {
@@ -216,7 +216,7 @@ namespace Help.WebHelp.HtmlHelp
                             }
                         }
                     }
-                    else if (response.ContentEncoding.ToLower().Contains("deflate"))
+                    else if (response.ContentEncoding?.ToLower().Contains("deflate")==true)
                     {
                         using (var stream = new DeflateStream(recvStream, CompressionMode.Decompress))
                         {
@@ -315,7 +315,7 @@ namespace Help.WebHelp.HtmlHelp
                 var recvStream = response.GetResponseStream();
                 if (recvStream != null)
                 {
-                    if (response.ContentEncoding.ToLower().Contains("gzip"))
+                    if (response.ContentEncoding?.ToLower().Contains("gzip")==true)
                     {
                         using (var stream = new GZipStream(recvStream, CompressionMode.Decompress))
                         {
@@ -325,7 +325,7 @@ namespace Help.WebHelp.HtmlHelp
                             }
                         }
                     }
-                    else if (response.ContentEncoding.ToLower().Contains("deflate"))
+                    else if (response.ContentEncoding?.ToLower().Contains("deflate")==true)
                     {
                         using (var stream = new DeflateStream(recvStream, CompressionMode.Decompress))
                         {

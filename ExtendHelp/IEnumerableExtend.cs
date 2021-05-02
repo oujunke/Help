@@ -62,7 +62,23 @@ namespace ExtendHelp
             }
             return t;
         }
-
+        /// <summary>
+        /// 连接字符串数组
+        /// </summary>
+        /// <param name="en"></param>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string Join(this IEnumerable<string> en,string str)
+        {
+            StringBuilder builder = new StringBuilder();
+            foreach (var item in en)
+            {
+                builder.Append(item);
+                builder.Append(str);
+            }
+            builder.Remove(builder.Length-str.Length, str.Length);
+            return builder.ToString();
+        }
         /// <summary>
         /// 遍历IEnumerable集合
         /// </summary>
@@ -303,6 +319,20 @@ namespace ExtendHelp
             {
                 en.Add(key, value);
             }
+        }
+        /// <summary>
+        /// int数组转byte数组
+        /// </summary>
+        /// <param name="arr"></param>
+        /// <returns></returns>
+        public static byte[] IntArrayToByteArray(this IEnumerable<int> arr)
+        {
+            List<byte> bs = new List<byte>();
+            foreach (var item in arr)
+            {
+                bs.AddRange(BitConverter.GetBytes(item));
+            }
+            return bs.ToArray();
         }
     }
 }
