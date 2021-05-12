@@ -68,7 +68,7 @@ namespace ExtendHelp
         /// <param name="en"></param>
         /// <param name="str"></param>
         /// <returns></returns>
-        public static string Join(this IEnumerable<string> en,string str)
+        public static string Join(this IEnumerable<string> en, string str)
         {
             StringBuilder builder = new StringBuilder();
             foreach (var item in en)
@@ -76,7 +76,7 @@ namespace ExtendHelp
                 builder.Append(item);
                 builder.Append(str);
             }
-            builder.Remove(builder.Length-str.Length, str.Length);
+            builder.Remove(builder.Length - str.Length, str.Length);
             return builder.ToString();
         }
         /// <summary>
@@ -324,15 +324,43 @@ namespace ExtendHelp
         /// int数组转byte数组
         /// </summary>
         /// <param name="arr"></param>
+        /// <param name="isReversal">是否反转</param>
         /// <returns></returns>
-        public static byte[] IntArrayToByteArray(this IEnumerable<int> arr)
+        public static byte[] IntArrayToByteArray(this IEnumerable<int> arr, bool isReversal = true)
         {
             List<byte> bs = new List<byte>();
+            byte[] data;
             foreach (var item in arr)
             {
-                bs.AddRange(BitConverter.GetBytes(item));
+                data = BitConverter.GetBytes(item);
+                if (isReversal)
+                {
+                    bs.AddRange(data.Reverse());
+                }
+                else
+                {
+                    bs.AddRange(data);
+                }
+               
             }
             return bs.ToArray();
+        }
+        /// <summary>
+        /// 转成数组字符串
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="arr"></param>
+        /// <returns></returns>
+        public static string ToArrayString<T>(this IEnumerable<T> arr)
+        {
+            StringBuilder stringBuilder = new StringBuilder("[");
+            foreach (var item in arr)
+            {
+                stringBuilder.Append(item);
+                stringBuilder.Append(',');
+            }
+            stringBuilder[stringBuilder.Length - 1] = ']';
+            return stringBuilder.ToString();
         }
     }
 }

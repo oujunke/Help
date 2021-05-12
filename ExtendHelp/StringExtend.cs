@@ -301,7 +301,7 @@ namespace ExtendHelp
         /// <returns></returns>
         public static string AesEncrypt(this string data, byte[] key, byte[] iv)
         {
-            return Convert.ToBase64String(AesEncrypt(Convert.FromBase64String(data), key, iv));
+            return Convert.ToBase64String(AesEncrypt(Encoding.UTF8.GetBytes(data), key, iv));
         }
         /// <summary>
         /// Aes解密
@@ -516,21 +516,37 @@ namespace ExtendHelp
         /// <returns></returns>
         public static string RsaEncrypt(this string data, byte[] modulus, byte[] exponent)
         {
-            List<byte> resultList = new List<byte>();
             var dataBs = Encoding.UTF8.GetBytes(data);
-            using (RSA rsa = RSA.Create())
+            return Convert.ToBase64String(RsaEncrypt(dataBs, modulus, exponent));
+        }
+        /// <summary>
+        /// Rsa加密
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="modulusBase64"></param>
+        /// <param name="exponentBase64"></param>
+        /// <returns></returns>
+        public static byte[] RsaEncrypt(this byte[] dataBs, byte[] modulus, byte[] exponent)
+        {
+            List<byte> resultList = new List<byte>();
+
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
             {
                 rsa.ImportParameters(new RSAParameters
                 {
                     Modulus = modulus,
                     Exponent = exponent,
                 });
-                for (int i = 0; i < dataBs.Length; i++)
+                int MaxBlockSize = rsa.KeySize / 8 - 12;//加密块最大长度限制
+                int num = 0;
+                for (int i = 0; i < dataBs.Length;)
                 {
-                    resultList.AddRange(rsa.Encrypt(dataBs.Substring(i,Math.Min(dataBs.Length-i,117)), RSAEncryptionPadding.Pkcs1));
+                    num = Math.Min(dataBs.Length - i, MaxBlockSize);
+                    resultList.AddRange(rsa.Encrypt(dataBs.Substring(i, num), false));
+                    i += num;
                 }
             }
-            return Convert.ToBase64String(resultList.ToArray());
+            return resultList.Skip(1).ToArray();
         }
         #endregion
         #region MD5加密
@@ -933,7 +949,7 @@ namespace ExtendHelp
         {
             hexString = hexString.Replace(@"\x", "").Replace(" ", "");
             if ((hexString.Length % 2) != 0)
-                hexString = "0"+ hexString;
+                hexString = "0" + hexString;
             byte[] returnBytes = new byte[hexString.Length / 2];
             for (int i = 0; i < returnBytes.Length; i++)
                 returnBytes[i] = Convert.ToByte(hexString.Substring(i * 2, 2), 16);
