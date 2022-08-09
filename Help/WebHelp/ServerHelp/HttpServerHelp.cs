@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using ExtendHelp;
+using Help.Model;
 using HttpServer;
 
 namespace Help.WebHelp.ServerHelp

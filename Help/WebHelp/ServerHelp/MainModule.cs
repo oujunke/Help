@@ -1,4 +1,5 @@
-﻿using HttpServer;
+﻿using Help.Model;
+using HttpServer;
 using System;
 using System.Collections.Generic;
 using System.IO;
