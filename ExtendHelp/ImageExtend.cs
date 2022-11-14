@@ -56,6 +56,29 @@ namespace ExtendHelp
             return bs;
         }
         /// <summary>
+        /// 图片二值化
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <param name="num">阈值</param>
+        /// <returns>第一高，第二宽</returns>
+        public static Bitmap Binary(this Bitmap bitmap, int num = 50)
+        {
+            Bitmap bitmap1 = new Bitmap(bitmap);
+            Color c = Color.Empty;
+            for (int y = 0; y < bitmap1.Height; y++)
+            {
+                for (int x = 0; x < bitmap1.Width; x++)
+                {
+                    c = bitmap.GetPixel(x, y);
+                    if ((c.R + c.G + c.B) > num)
+                        bitmap1.SetPixel(x,y,Color.White);
+                    else
+                        bitmap1.SetPixel(x, y, Color.Black);
+                }
+            }
+            return bitmap1;
+        }
+        /// <summary>
         /// 图片数组化
         /// </summary>
         /// <param name="bitmap"></param>
@@ -104,24 +127,24 @@ namespace ExtendHelp
             return result;
         }
         /// <summary>
-        /// 转图片(快速-使用指针)
+        /// 转图片
         /// </summary>
         /// <param name="colorData"></param>
         /// <returns></returns>
         public static Bitmap ColorArrayToBitmap(this Color[,] colorData)
         {
-            Bitmap bi = new Bitmap(colorData.GetLength(1), colorData.GetLength(0));
-            for (int y = 0; y < colorData.GetLength(0); y++)
+            Bitmap bi = new Bitmap(colorData.GetLength(0), colorData.GetLength(1));
+            for (int y = 0; y < colorData.GetLength(1); y++)
             {
-                for (int x = 0; x < colorData.GetLength(1); x++)
+                for (int x = 0; x < colorData.GetLength(0); x++)
                 {
-                    bi.SetPixel(x, y, colorData[y, x]);
+                    bi.SetPixel(x, y, colorData[x, y]);
                 }
             }
             return bi;
         }
         /// <summary>
-        /// 转图片
+        /// 转图片(快速-使用指针)
         /// </summary>
         /// <param name="colors"></param>
         /// <returns></returns>
