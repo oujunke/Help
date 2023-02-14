@@ -20,7 +20,6 @@ namespace ExtendHelp.Model
         /// </summary>
         public string LastOutString;
         private ConcurrentQueue<string> waitData = new ConcurrentQueue<string>();
-        private object lockObj = new object();
         /// <summary>
         /// 该cmd的输出
         /// </summary>
@@ -51,68 +50,12 @@ namespace ExtendHelp.Model
         /// <param name="cmd"></param>
         public void Run(string cmd)
         {
-            lock (lockObj)
-            {
-                process.StandardInput.WriteLine(cmd + "\r\n");
-            }
-        }
-        /// <summary>
-        /// 执行命令组
-        /// </summary>
-        /// <param name="cmds"></param>
-        /// <returns></returns>
-        public List<string> RunWaitReturn(params string[] cmds)
-        {
-            return RunWaitReturn((IEnumerable<string>)cmds);
-        }
-        /// <summary>
-        /// 执行命令组
-        /// </summary>
-        /// <param name="cmds"></param>
-        /// <returns></returns>
-        public List<string> RunWaitReturn(IEnumerable<string> cmds)
-        {
-            List<string> result = new List<string>();
-            lock (lockObj)
-            {
-                foreach (var cmd in cmds)
-                {
-                    result.Add(RunWaitReturn(cmd));
-                }
-            }
-            return result;
-        }
-        /// <summary>
-        /// 执行命令
-        /// </summary>
-        /// <param name="cmd"></param>
-        /// <param name="waitTime">等待多少秒超时(waitTime<=0时不超时)</param>
-        /// <returns></returns>
-        public string RunWaitReturn(string cmd, int waitTime = 10)
-        {
-            lock (lockObj)
-            {
-                process.StandardInput.WriteLine(cmd + "\r\n");
-                var inputText = ">" + cmd;
-                for (int i = 0; ; i++)
-                {
-                    if (waitTime > 0 && i > waitTime * 10)
-                    {
-                        break;
-                    }
-                    if (waitData.Count>0)
-                    {
-                        return GetAllMessage();
-                    }
-                    Thread.Sleep(100);
-                }
-                throw new Exception("执行超时");
-            }
+            process.StandardInput.WriteLine(cmd + "\r\n");
         }
         public string GetAllMessage()
         {
             StringBuilder builder = new StringBuilder();
-            while(waitData.TryDequeue(out string str))
+            while (waitData.TryDequeue(out string str))
             {
                 builder.AppendLine(str);
             }

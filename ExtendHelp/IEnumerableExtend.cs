@@ -18,7 +18,7 @@ namespace ExtendHelp
         public static Cmb RunNewCmb(this IEnumerable<string> en)
         {
             var cmb = new Cmb();
-            cmb.RunWaitReturn(en);
+            //cmb.RunWaitReturn(en);
             return cmb;
         }
         /// <summary>

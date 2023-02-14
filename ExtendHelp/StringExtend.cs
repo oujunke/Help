@@ -1211,7 +1211,8 @@ namespace ExtendHelp
         /// <returns></returns>
         public static string RunCmb(this string str, int waitTime = 10)
         {
-            return Cmb.DefaultCmb.RunWaitReturn(str, 10);
+            //return Cmb.DefaultCmb.RunWaitReturn(str, 10);
+            return str;
         }
         /// <summary>
         /// 执行cmb命令并返回cmb对象
@@ -1234,7 +1235,8 @@ namespace ExtendHelp
         public static string RunNewCmb(this string str, out Cmb cmb, int waitTime = 10)
         {
             cmb = new Cmb();
-            return cmb.RunWaitReturn(str, 10);
+            //return cmb.RunWaitReturn(str, 10);
+            return str;
         }
         #endregion
     }
