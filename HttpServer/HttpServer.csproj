@@ -1,18 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="Sessions\**" />
     <EmbeddedResource Remove="Sessions\**" />
     <None Remove="Sessions\**" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Remove="Server.cs" />
     <Compile Remove="SimpleServer.cs" />
   </ItemGroup>
-
 </Project>

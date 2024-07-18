@@ -18,61 +18,107 @@ namespace ExtendHelp
         private string _rtfHead;
         public string RTFData { get; private set; }
         public string Text { get; private set; }
-        public Rtf():this(string.Empty)
+        private Dictionary<Color, int> colors;
+        private Dictionary<string, int>fonts;
+        private string colorStr;
+        private string fontStr;
+        public Rtf() : this(string.Empty)
         {
 
+        }
+        public string GetColorRTF(Color color)
+        {
+            if (colors.ContainsKey(color))
+            {
+                return @"\cf" + colors[color];
+            }
+            var index = colors.Count + 1;
+            colors.Add(color, index);
+            colorStr += $"\\red{color.R}\\green{color.G}\\blue{color.B};";
+            return @"\cf" + index;
+        }
+        public string GetFontRTF(string name)
+        {
+            if (fonts.ContainsKey(name))
+            {
+                return @"\f" + fonts[name];
+            }
+            var index = fonts.Count + 1;
+            fonts.Add(name, index);
+            UpdateFont();
+            return @"\f" + index;
         }
         public Rtf(string str)
         {
-            _rtfHead = @"{\rtf1\ansi\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset134 \'cb\'ce\'cc\'e5;}}{\colortbl ;\red255\green0\blue0;\red0\green0\blue255;\red255\green255\blue0;}{\*\generator Riched20 10.0.15063}\viewkind4\uc1\pard\sl276\slmult1\f0\fs22\lang2052";
+            colors = new Dictionary<Color, int> {
+                {Color.Black,0 },
+                {Color.Red,1 },
+                {Color.Blue,2 },
+                {Color.Yellow,3 },
+            };
+            colorStr = "\\red255\\green0\\blue0;\\red0\\green0\\blue255;\\red255\\green255\\blue0;";
+            fonts = new Dictionary<string, int>
+            {
+                { "宋体",0},
+                { "黑体",1},
+                { "微软雅黑",2},
+            };
+            UpdateFont();
+            UpdateHead();
             Text = str;
             RTFData = Str2RTF(str?.Replace("\r\n", @"\par"));
         }
+        private void UpdateFont()
+        {
+            StringBuilder builder = new StringBuilder();
 
-        public string GetColorSizeRTF(string str, RtfColor color, int fontSize = 12)
+            foreach (var kv in fonts)
+            {
+                builder.Append($"{{\\f{kv.Value}\\fnil\\fcharset134 {Str2RTF(kv.Key)};}}");
+            }
+            fontStr = builder.ToString();
+        }
+        private void UpdateHead()
+        {
+            _rtfHead = $"{{\\rtf1\\ansi\\deff0\\nouicompat{{\\fonttbl{fontStr}}}{{\\colortbl ;{colorStr}}}{{\\*\\generator Riched20 10.0.15063}}\\viewkind4\\uc1\\pard\\sl276\\slmult1\\f0\\fs22\\lang2052";
+        }
+
+        public string GetColorSizeRTF(string str, Color color, int fontSize = 12, string fontName = "微软雅黑")
         {
             string tempS = Str2RTF(str?.Replace("\r\n", @"\par"));
-            string colorS = string.Empty;
-            if (color == RtfColor.Red)
-                colorS = @"\cf1";
-            else if (color == RtfColor.Blue)
-                colorS = @"\cf2";
-            else if (color == RtfColor.Yellow)
-                colorS = @"\cf3";
-            else
-                colorS = @"\cf0";
-            return $@"{colorS}\fs{fontSize * 2} {tempS}";
+            string colorS = GetColorRTF(color);
+            return $@"{GetFontRTF(fontName)}{colorS}\fs{fontSize * 2} {tempS}";
         }
-        public static string GetColorRTF(RtfColor color)
-        {
-            string colorS = string.Empty;
-            if (color == RtfColor.Red)
-                colorS = @"\cf1";
-            else if (color == RtfColor.Blue)
-                colorS = @"\cf2";
-            else if (color == RtfColor.Yellow)
-                colorS = @"\cf3";
-            else
-                colorS = @"\cf0";
-            return $"{colorS}";
-        }
-        public Rtf AddColorText(string str, RtfColor color, int fontSize = 12)
+        public Rtf AddColorText(string str, Color color, int fontSize = 12)
         {
             var calue = GetColorSizeRTF(str, color, fontSize);
             RTFData += calue;
             Text += str;
             return this;
         }
+        private string GetLink(string str, string label,string fontHead)
+        {
+            return $"{{{fontHead}{{\\field{{\\*\\fldinst{{HYPERLINK \"{Str2RTF(label)}\"}}{{\\fldrslt{{\\ul\\cf2\\cf2\\ul{Str2RTF(label)}}}";
+        }
+        public Rtf AddLink(string str, string label)
+        {
+            //{\f2\fs28{\field{\*\fldinst{HYPERLINK "\\l "}}{\fldrslt{\ul\cf2\cf2\ul\'b2\'e2\'ca\'d4\'b3\'ac\'c1\'b4\'bd\'d3}}}}
+            var calue = GetLink(str, label, string.Empty);
+
+            RTFData += calue;
+            Text += str;
+            return this;
+        }
         public Rtf AddColorText(string str)
         {
-            return AddColorText(str, 0);
+            return AddColorText(str, Color.Black);
         }
-		public static Rtf GetRtf(string str, params object[] ss)
-		{
-			return RtfExtend.AddRtf(new Rtf(), str, ss);
-		}
+        public static Rtf GetRtf(string str, params object[] ss)
+        {
+            return RtfExtend.AddRtf(new Rtf(), str, ss);
+        }
 
-		public Rtf AddRtf(Rtf rh)
+        public Rtf AddRtf(Rtf rh)
         {
             RTFData += rh.RTFData;
             Text += rh.Text;
@@ -125,7 +171,8 @@ namespace ExtendHelp
         /// <returns></returns>
         private string CharTo16(char ch)
         {
-            System.Text.Encoding chs = System.Text.Encoding.GetEncoding("gb2312");
+            System.Text.Encoding chs = CodePagesEncodingProvider.Instance.GetEncoding("gb2312");
+            //System.Text.Encoding chs = System.Text.Encoding.UTF8;
             byte[] bytes = chs.GetBytes(ch.ToString());
             string str = "";
             for (int i = 0; i < bytes.Length; i++)
@@ -134,16 +181,9 @@ namespace ExtendHelp
             }
             return str.ToLower();
         }
-		public override string ToString()
-		{
-			return Text;
-		}
-		public enum RtfColor
+        public override string ToString()
         {
-            Black,
-            Red,
-            Blue,
-            Yellow
+            return Text;
         }
     }
 }
